@@ -1,0 +1,74 @@
+/* Sayfa genel */
+.page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f5f5;
+  font-family: Arial, sans-serif;
+}
+
+/* Kart kutusu */
+.card {
+  background: white;
+  border-radius: 10px;
+  padding: 20px;
+  max-width: 600px;
+  width: 100%;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Başlık */
+.card h1 {
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+/* Form satırları */
+.form-row {
+  margin-bottom: 15px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Label */
+.form-row label {
+  margin-bottom: 5px;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+/* Input, select, textarea */
+.form-row input,
+.form-row select,
+.form-row textarea {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+/* Butonlar */
+button {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 6px;
+  background: #007bff;
+  color: white;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+button:hover {
+  background: #0056b3;
+}
+
+/* Çıkış butonu özel */
+.logout-btn {
+  background: #dc3545;
+  margin-bottom: 15px;
+}
+
+.logout-btn:hover {
+  background: #a71d2a;
+}

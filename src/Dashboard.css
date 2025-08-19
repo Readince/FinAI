@@ -1,0 +1,31 @@
+.toolbar {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: center;
+  margin: 8px 0 4px;
+}
+
+.toolbar__label {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.toolbar__select {
+  min-width: 260px;
+  padding: 10px 12px;
+  /*background: #0a1324; */
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 12px; 
+}
+
+@media (max-width: 420px) {
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .toolbar__select {
+    width: 100%;
+  }
+}
