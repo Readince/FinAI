@@ -1,0 +1,32 @@
+{
+  "name": "bank_api",
+  "version": "1.0.0",
+  "description": "bankend entegrasyonu",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "node server.js",
+    "seed": "node services/seedUsers.js",
+    "db:psql": "psql \"$DATABASE_URL\"",
+    "db:init": "psql \"$DATABASE_URL\" -f migrations/001_init.sql"
+  },
+  "author": "Alirıza",
+  "license": "ISC",
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "bcryptjs": "^2.4.3",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.2.0",
+    "helmet": "^7.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.0",
+    "openai": "^5.16.0",
+    "pg": "^8.12.0",
+    "redis": "^4.7.1",
+    "uuid": "^9.0.1"
+  }
+}
