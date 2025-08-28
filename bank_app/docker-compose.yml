@@ -1,0 +1,14 @@
+version: '3'
+
+services:
+  node:
+    build:
+      context: .
+    ports:
+      - "3035:3000"
+    volumes:
+      - ./:/usr/src/app
+      - node_modules:/usr/src/app/node_modules
+
+volumes:
+  node_modules:
