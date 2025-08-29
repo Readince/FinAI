@@ -3,7 +3,24 @@ import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 
 // MUI Core
-import { Container, Card, CardHeader, CardContent, Grid, Box, TextField, FormControl, FormLabel, RadioGroup, FormControlLabel, Radio, Stack, Button, Divider, Typography } from "@mui/material";
+import {
+  Container,
+  Card,
+  CardHeader,
+  CardContent,
+  Grid,
+  Box,
+  TextField,
+  FormControl,
+  FormLabel,
+  RadioGroup,
+  FormControlLabel,
+  Radio,
+  Stack,
+  Button,
+  Divider,
+  Typography,
+} from "@mui/material";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
@@ -16,7 +33,8 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 // MUI Lab
 import { LoadingButton } from "@mui/lab";
 
-const API_BASE = (import.meta as any)?.env?.VITE_API_URL || "http://localhost:3001";
+const API_BASE =
+  (import.meta as any)?.env?.VITE_API_URL || "http://localhost:3001";
 
 export default function YeniMusteri() {
   const navigate = useNavigate();
@@ -64,8 +82,10 @@ export default function YeniMusteri() {
     if (!form.uyruk) e.uyruk = "Uyruk seçiniz";
     if (!form.anneAdi.trim()) e.anneAdi = "Anne adı gerekli";
     if (!form.babaAdi.trim()) e.babaAdi = "Baba adı gerekli";
-    if (!/^\+?\d[\d\s-]{7,}$/.test(form.telefon.trim())) e.telefon = "Geçerli bir telefon girin";
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) e.email = "Geçerli bir e-posta girin";
+    if (!/^\+?\d[\d\s-]{7,}$/.test(form.telefon.trim()))
+      e.telefon = "Geçerli bir telefon girin";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim()))
+      e.email = "Geçerli bir e-posta girin";
     if (!form.adres.trim()) e.adres = "Adres gerekli";
     return e;
   }
@@ -80,8 +100,18 @@ export default function YeniMusteri() {
       phone: form.telefon || null,
       email: form.email || null,
       birth_date: form.dogum ? dayjs(form.dogum).format("YYYY-MM-DD") : null,
-      gender: form.cinsiyet === "erkek" ? "E" : form.cinsiyet === "kadin" ? "K" : null,
-      nationality: form.uyruk === "turk" ? "TR" : form.uyruk === "yabanci" ? "YABANCI" : null,
+      gender:
+        form.cinsiyet === "erkek"
+          ? "E"
+          : form.cinsiyet === "kadin"
+          ? "K"
+          : null,
+      nationality:
+        form.uyruk === "turk"
+          ? "TR"
+          : form.uyruk === "yabanci"
+          ? "YABANCI"
+          : null,
       mother_name: form.anneAdi || null,
       father_name: form.babaAdi || null,
       address: form.adres || null,
@@ -115,7 +145,11 @@ export default function YeniMusteri() {
       }
 
       const created = await res.json();
-      setMessage(`Müşteri kaydı oluşturuldu. (ID: ${created.id || created?.customer?.id || "?"})`);
+      setMessage(
+        `Müşteri kaydı oluşturuldu. (ID: ${
+          created.id || created?.customer?.id || "?"
+        })`
+      );
       // formu sıfırla
       setForm({
         tckn: "",
@@ -140,7 +174,11 @@ export default function YeniMusteri() {
   }
 
   async function safeJson(res: Response) {
-    try { return await res.json(); } catch { return null; }
+    try {
+      return await res.json();
+    } catch {
+      return null;
+    }
   }
 
   function logout() {
@@ -260,18 +298,20 @@ export default function YeniMusteri() {
                 </Grid>
 
                 {/* Doğum Tarihi */}
-                <Grid item xs={12} md={6}  >
+                <Grid item xs={12} md={6}>
                   <DatePicker
                     label="Doğum Tarihi"
                     value={form.dogum}
                     onChange={(val) => {
                       setForm((f) => ({ ...f, dogum: val }));
                       setMessage("");
-                      setErrors((prev) => ({ ...prev, dogum: undefined as any }));
-                    
+                      setErrors((prev) => ({
+                        ...prev,
+                        dogum: undefined as any,
+                      }));
                     }}
-                    slotProps={{ 
-                      
+                    sx={{ width: "24.5vw" }}
+                    slotProps={{
                       textField: {
                         fullWidth: true,
                         error: !!errors.dogum,
@@ -363,7 +403,15 @@ export default function YeniMusteri() {
                 </Grid>
 
                 {/* Adres */}
-                <Grid item xs={12} md={12}  sx={{ flexBasis: "100% !important", maxWidth: "100% !important" }}>
+                <Grid
+                  item
+                  xs={12}
+                  md={12}
+                  sx={{
+                    flexBasis: "98% !important",
+                    maxWidth: "98% !important",
+                  }}
+                >
                   <TextField
                     label="Adres"
                     name="adres"
@@ -380,7 +428,11 @@ export default function YeniMusteri() {
 
                 {/* Butonlar */}
                 <Grid item xs={12}>
-                  <Stack direction="row" spacing={2} justifyContent="space-between">
+                  <Stack
+                    direction="row"
+                    spacing={2}
+                    justifyContent="space-between"
+                  >
                     <Button
                       type="button"
                       variant="outlined"
@@ -405,7 +457,11 @@ export default function YeniMusteri() {
                 {message && (
                   <Grid item xs={12}>
                     <Divider sx={{ my: 1 }} />
-                    <Typography color={message.startsWith("Hata") ? "error" : "success.main"}>
+                    <Typography
+                      color={
+                        message.startsWith("Hata") ? "error" : "success.main"
+                      }
+                    >
                       {message}
                     </Typography>
                   </Grid>

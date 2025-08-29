@@ -1,14 +1,29 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Container, Card, CardHeader, CardContent, Grid, Box, TextField, FormControl,
-  InputLabel, Select, MenuItem, Stack, Button, Divider, Typography, InputAdornment
+  Container,
+  Card,
+  CardHeader,
+  CardContent,
+  Grid,
+  Box,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Stack,
+  Button,
+  Divider,
+  Typography,
+  InputAdornment,
 } from "@mui/material";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 
-const API_BASE = (import.meta as any)?.env?.VITE_API_URL || "http://localhost:3001";
+const API_BASE =
+  (import.meta as any)?.env?.VITE_API_URL || "http://localhost:3001";
 
 export default function HesapIslemleri() {
   const navigate = useNavigate();
@@ -41,11 +56,16 @@ export default function HesapIslemleri() {
     const e: Record<string, string> = {};
     if (!/^\d{11}$/.test(form.tckn)) e.tckn = "TCKN/VKN 11 haneli olmalı";
     if (!form.doviz) e.doviz = "Döviz kodu seçiniz";
-    if (form.bakiye === "" || isNaN(Number(form.bakiye)) || Number(form.bakiye) < 0)
+    if (
+      form.bakiye === "" ||
+      isNaN(Number(form.bakiye)) ||
+      Number(form.bakiye) < 0
+    )
       e.bakiye = "Geçerli bir bakiye giriniz";
     if (!form.hesapTipi) e.hesapTipi = "Hesap tipi seçiniz";
     const faizNum = Number(form.faiz);
-    if (isNaN(faizNum) || faizNum < 0 || faizNum > 100) e.faiz = "Faiz %0–100 arası olmalı";
+    if (isNaN(faizNum) || faizNum < 0 || faizNum > 100)
+      e.faiz = "Faiz %0–100 arası olmalı";
     if (!form.ekNo || form.ekNo.length < 1) e.ekNo = "Hesap ek no giriniz";
     return e;
   }
@@ -94,7 +114,11 @@ export default function HesapIslemleri() {
   }
 
   async function safeJson(res: Response) {
-    try { return await res.json(); } catch { return null; }
+    try {
+      return await res.json();
+    } catch {
+      return null;
+    }
   }
 
   function logout() {
@@ -105,13 +129,23 @@ export default function HesapIslemleri() {
   return (
     <Container
       maxWidth="md"
-      sx={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", py: 6 }}
+      sx={{
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        py: 6,
+      }}
     >
       <Card sx={{ width: "60%" }}>
         <CardHeader
           title="Hesap Oluştur"
           action={
-            <Button onClick={logout} color="error" startIcon={<LogoutRoundedIcon />}>
+            <Button
+              onClick={logout}
+              color="error"
+              startIcon={<LogoutRoundedIcon />}
+            >
               Çıkış Yap
             </Button>
           }
@@ -131,27 +165,28 @@ export default function HesapIslemleri() {
                   helperText={errors.tckn || " "}
                   inputProps={{ inputMode: "numeric", pattern: "\\d{11}" }}
                   placeholder="12345678901"
+                  sx={{ width: "13vw" }}
                 />
               </Grid>
 
               <Grid item xs={12} md={6}>
-                <FormControl fullWidth error={!!errors.doviz}>
-                  <InputLabel id="doviz-label">Döviz Kodu</InputLabel>
+                <FormControl fullWidth error={!!errors.hesapTipi}>
+                  <InputLabel id="hesapTipi-label">Hesap Tipi</InputLabel>
                   <Select
-                    labelId="doviz-label"
-                    id="doviz"
-                    name="doviz"
-                    value={form.doviz}
-                    label="Döviz Kodu"
+                    labelId="hesapTipi-label"
+                    id="hesapTipi"
+                    name="hesapTipi"
+                    value={form.hesapTipi}
+                    label="Hesap Tipi"
                     onChange={onChange}
+                    sx={{ width: "14vw" }}
+                    
                   >
-                    <MenuItem value="TRY">TRY</MenuItem>
-                    <MenuItem value="USD">USD</MenuItem>
-                    <MenuItem value="EUR">EUR</MenuItem>
-                    <MenuItem value="GBP">GBP</MenuItem>
+                    <MenuItem value="vadesiz">Vadesiz</MenuItem>
+                    <MenuItem value="vadeli">Vadeli</MenuItem>
                   </Select>
                   <Typography variant="caption" color="error">
-                    {errors.doviz || " "}
+                    {errors.hesapTipi || " "}
                   </Typography>
                 </FormControl>
               </Grid>
@@ -168,28 +203,37 @@ export default function HesapIslemleri() {
                   helperText={errors.bakiye || " "}
                   placeholder="0.00"
                   inputProps={{ inputMode: "decimal" }}
+                  sx={{ width: "13vw" }}
                   InputProps={{
-                    startAdornment: <InputAdornment position="start">{form.doviz}</InputAdornment>,
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        {form.doviz}
+                      </InputAdornment>
+                      
+                    ),
                   }}
                 />
               </Grid>
 
               <Grid item xs={12} md={6}>
-                <FormControl fullWidth error={!!errors.hesapTipi}>
-                  <InputLabel id="hesapTipi-label">Hesap Tipi</InputLabel>
+                <FormControl fullWidth error={!!errors.doviz}>
+                  <InputLabel id="doviz-label">Döviz Kodu</InputLabel>
                   <Select
-                    labelId="hesapTipi-label"
-                    id="hesapTipi"
-                    name="hesapTipi"
-                    value={form.hesapTipi}
-                    label="Hesap Tipi"
+                    labelId="doviz-label"
+                    id="doviz"
+                    name="doviz"
+                    value={form.doviz}
+                    label="Döviz Kodu"
                     onChange={onChange}
+                    sx={{ width: "14vw" }}
                   >
-                    <MenuItem value="vadesiz">Vadesiz</MenuItem>
-                    <MenuItem value="vadeli">Vadeli</MenuItem>
+                    <MenuItem value="TRY">TRY</MenuItem>
+                    <MenuItem value="USD">USD</MenuItem>
+                    <MenuItem value="EUR">EUR</MenuItem>
+                    <MenuItem value="GBP">GBP</MenuItem>
                   </Select>
                   <Typography variant="caption" color="error">
-                    {errors.hesapTipi || " "}
+                    {errors.doviz || " "}
                   </Typography>
                 </FormControl>
               </Grid>
@@ -205,8 +249,13 @@ export default function HesapIslemleri() {
                   error={!!errors.faiz}
                   helperText={errors.faiz || " "}
                   placeholder="0"
+                  sx={{ width: "13vw" }}
                   inputProps={{ inputMode: "decimal" }}
-                  InputProps={{ endAdornment: <InputAdornment position="end">%</InputAdornment> }}
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">%</InputAdornment>
+                    ),
+                  }}
                 />
               </Grid>
 
@@ -219,6 +268,7 @@ export default function HesapIslemleri() {
                   onChange={onChange}
                   error={!!errors.ekNo}
                   helperText={errors.ekNo || " "}
+                  sx={{ width: "14vw" }}
                   placeholder="Örn: 001"
                   inputProps={{ inputMode: "numeric" }}
                 />
@@ -226,7 +276,11 @@ export default function HesapIslemleri() {
 
               {/* Butonlar + Mesaj */}
               <Grid item xs={12}>
-                <Stack direction="row" spacing={2} justifyContent="space-between">
+                <Stack
+                  direction="row"
+                  spacing={2}
+                  justifyContent="space-between"
+                >
                   <Button
                     type="button"
                     variant="outlined"
@@ -249,7 +303,11 @@ export default function HesapIslemleri() {
               {message && (
                 <Grid item xs={12}>
                   <Divider sx={{ my: 1 }} />
-                  <Typography color={message.startsWith("Hata") ? "error" : "success.main"}>
+                  <Typography
+                    color={
+                      message.startsWith("Hata") ? "error" : "success.main"
+                    }
+                  >
                     {message}
                   </Typography>
                 </Grid>
