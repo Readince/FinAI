@@ -1,35 +1,82 @@
-CREATE TABLE IF NOT EXISTS customers (
-  id            BIGSERIAL PRIMARY KEY,
-  national_id   VARCHAR(11)  NOT NULL UNIQUE,   -- TCKN/VKN
-  serial_no     VARCHAR(20),
-  first_name    VARCHAR(100) NOT NULL,
-  last_name     VARCHAR(100) NOT NULL,
-  phone         VARCHAR(20),
-  email         VARCHAR(255),
-  birth_date    DATE,
-  gender        CHAR(1) CHECK (gender IN ('E','K')),
-  nationality   VARCHAR(10) CHECK (nationality IN ('TR','YABANCI')),
-  mother_name   VARCHAR(100),
-  father_name   VARCHAR(100),
-  address       TEXT,
-  branch_no     VARCHAR(10),
-  created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at    TIMESTAMPTZ NOT NULL DEFAULT now()
-);
+-- (A) sub_no müşteri bazında benzersiz olsun
+ALTER TABLE accounts
+  ADD CONSTRAINT IF NOT EXISTS accounts_unique_customer_sub UNIQUE (customer_id, sub_no);
 
-CREATE TABLE IF NOT EXISTS accounts (
-  id            BIGSERIAL PRIMARY KEY,
-  customer_id   BIGINT NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
-  currency_code CHAR(3) NOT NULL,
-  account_type  VARCHAR(20) NOT NULL CHECK (account_type IN ('VADESIZ','VADELI')),
-  balance       NUMERIC(18,2) NOT NULL DEFAULT 0,
-  interest_rate NUMERIC(5,2)  NOT NULL DEFAULT 0,
-  account_no    VARCHAR(40) NOT NULL UNIQUE,
-  sub_no        INTEGER,
-  status        VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
-  created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
-);
+-- (B) sub_no >= 1 güvence (opsiyonel ama faydalı)
+ALTER TABLE accounts
+  ADD CONSTRAINT IF NOT EXISTS accounts_sub_no_min CHECK (sub_no IS NULL OR sub_no >= 1);
 
-CREATE INDEX IF NOT EXISTS idx_customers_email ON customers(email);
-CREATE INDEX IF NOT EXISTS idx_accounts_customer ON accounts(customer_id);
-CREATE INDEX IF NOT EXISTS idx_accounts_currency ON accounts(currency_code);
+-- (C) müşteri bazında sıradaki sub_no'yu veren fonksiyon
+CREATE OR REPLACE FUNCTION accounts_next_sub_no(p_customer_id BIGINT)
+RETURNS INTEGER AS $$
+  SELECT COALESCE(MAX(sub_no), 0) + 1
+  FROM accounts
+  WHERE customer_id = p_customer_id;
+$$ LANGUAGE sql STABLE;
+
+-- (D) INSERT öncesi sub_no yoksa otomatik ver
+CREATE OR REPLACE FUNCTION trg_accounts_set_sub_no()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF NEW.sub_no IS NULL THEN
+    NEW.sub_no := accounts_next_sub_no(NEW.customer_id);
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS before_ins_accounts_sub_no ON accounts;
+CREATE TRIGGER before_ins_accounts_sub_no
+BEFORE INSERT ON accounts
+FOR EACH ROW
+EXECUTE FUNCTION trg_accounts_set_sub_no();
+
+-- (E) account_no otomatik üret (formatı istersen değiştir)
+CREATE OR REPLACE FUNCTION gen_account_no(p_customer_id BIGINT, p_sub_no INT)
+RETURNS TEXT AS $$
+  SELECT 'C' || p_customer_id::text || '-S' || LPAD(p_sub_no::text, 2, '0');
+$$ LANGUAGE sql IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION trg_accounts_set_account_no()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF NEW.account_no IS NULL OR NEW.account_no = '' THEN
+    NEW.account_no := gen_account_no(NEW.customer_id, NEW.sub_no);
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS before_ins_accounts_account_no ON accounts;
+CREATE TRIGGER before_ins_accounts_account_no
+BEFORE INSERT ON accounts
+FOR EACH ROW
+EXECUTE FUNCTION trg_accounts_set_account_no();
+
+-- (F) Görsel amaçlı: 01,02… için generated column
+ALTER TABLE accounts
+  ADD COLUMN IF NOT EXISTS sub_no_str TEXT
+  GENERATED ALWAYS AS (LPAD(sub_no::text, 2, '0')) STORED;
+
+-- (G) Faiz kurallarını DB seviyesinde de garanti altına al
+ALTER TABLE accounts
+  ADD CONSTRAINT IF NOT EXISTS chk_interest_vadesiz_vadeli
+  CHECK (
+    (account_type = 'VADESIZ' AND interest_rate = 0)
+    OR
+    (account_type = 'VADELI'  AND interest_rate BETWEEN 0 AND 50)
+  );
+
+-- (H) customers.updated_at otomatik güncellensin
+CREATE OR REPLACE FUNCTION set_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at := now();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_customers_set_updated_at ON customers;
+CREATE TRIGGER trg_customers_set_updated_at
+BEFORE UPDATE ON customers
+FOR EACH ROW EXECUTE FUNCTION set_updated_at();

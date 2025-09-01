@@ -20,6 +20,7 @@ import {
   Button,
   Divider,
   Typography,
+  Switch, // <-- eklendi
 } from "@mui/material";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
@@ -52,6 +53,7 @@ export default function YeniMusteri() {
     telefon: "",
     email: "",
     adres: "",
+    openDefaultAccount: true, // <-- eklendi (varsayılan: açık)
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -116,6 +118,8 @@ export default function YeniMusteri() {
       father_name: form.babaAdi || null,
       address: form.adres || null,
       branch_no: null,
+      // kritik: backend'in beklediği anahtar
+      open_default_account: !!form.openDefaultAccount, // <-- eklendi
     };
   }
 
@@ -138,24 +142,34 @@ export default function YeniMusteri() {
         body: JSON.stringify(toApiPayload()),
       });
 
+      const data = await safeJson(res);
+
       if (!res.ok) {
-        const data = await safeJson(res);
         const msg = data?.msg || `Hata: ${res.status}`;
         throw new Error(msg);
       }
 
-      const created = await res.json();
+      // Beklenen cevap: { customer, default_account }
+      const customerId = data?.customer?.id ?? data?.id ?? "?";
+      const ekNo =
+        data?.default_account?.sub_no_str ??
+        data?.default_account?.sub_no ??
+        null;
+
       setMessage(
-        `Müşteri kaydı oluşturuldu. (ID: ${
-          created.id || created?.customer?.id || "?"
-        })`
+        ekNo
+          ? `Müşteri oluşturuldu (ID: ${customerId}). Varsayılan vadesiz TRY hesap açıldı — Ek No: ${String(
+              ekNo
+            ).padStart(2, "0")}.`
+          : `Müşteri oluşturuldu (ID: ${customerId}).`
       );
-      // formu sıfırla
-      setForm({
+
+      // formu sıfırla (switch'i aynı bırakmak istersen onu koruyoruz)
+      setForm((f) => ({
         tckn: "",
         ad: "",
         soyad: "",
-        dogum: null,
+        dogum: null as any,
         cinsiyet: "",
         seriNo: "",
         uyruk: "",
@@ -164,7 +178,8 @@ export default function YeniMusteri() {
         telefon: "",
         email: "",
         adres: "",
-      });
+        openDefaultAccount: f.openDefaultAccount, // tercih korunuyor
+      }));
       setErrors({});
     } catch (err: any) {
       setMessage(err.message || "Beklenmeyen bir hata oluştu");
@@ -423,6 +438,21 @@ export default function YeniMusteri() {
                     multiline
                     minRows={3}
                     fullWidth
+                  />
+                </Grid>
+
+                {/* Varsayılan vadesiz TRY hesabı */}
+                <Grid item xs={12} md={12}>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={form.openDefaultAccount}
+                        onChange={(_, v) =>
+                          setForm((f) => ({ ...f, openDefaultAccount: v }))
+                        }
+                      />
+                    }
+                    label="Müşteri oluşturulunca 0 TL Vadesiz TRY hesabı açılsın"
                   />
                 </Grid>
 

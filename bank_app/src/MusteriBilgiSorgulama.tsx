@@ -17,7 +17,7 @@ type CustomerAPI = {
   serial_no?: string | null;
   first_name?: string;
   last_name?: string;
-  birth_date?: string | null; // YYYY-MM-DD
+  birth_date?: string | null;
   gender?: "E" | "K" | null;
   nationality?: "TR" | "YABANCI" | null;
   mother_name?: string | null;
@@ -52,7 +52,7 @@ type CustomerInfo = {
   adres?: string;
   telefon?: string;
   email?: string;
-  subeNo?: string;
+  // subeNo kaldırıldı (hesap tarafına taşındı)
 };
 
 function Field({ label, value }: { label: string; value?: string }) {
@@ -62,6 +62,17 @@ function Field({ label, value }: { label: string; value?: string }) {
       <Typography variant="body1" sx={{ mt: 0.5 }}>{value && value.trim() !== "" ? value : "—"}</Typography>
     </Box>
   );
+}
+
+// Dövize göre şube no eşlemesi
+function subeNoFromCurrency(code?: string) {
+  switch ((code || "").toUpperCase()) {
+    case "TRY": return "5001";
+    case "USD": return "5002";
+    case "EUR": return "5003";
+    case "GBP": return "5004";
+    default: return "—";
+  }
 }
 
 export default function MusteriBilgiSorgulama() {
@@ -93,13 +104,6 @@ export default function MusteriBilgiSorgulama() {
         }
       } catch {}
     }
-    try {
-      const a = localStorage.getItem("account");
-      if (a) {
-        const parsedA = JSON.parse(a);
-        // localStorage formatını çok zorlamadan sadece chip'ler için kullanacağız (opsiyonel)
-      }
-    } catch {}
   }, [location.state]);
 
   // API: backend -> frontend map
@@ -116,7 +120,7 @@ export default function MusteriBilgiSorgulama() {
       adres: api.address || "",
       telefon: api.phone || "",
       email: api.email || "",
-      subeNo: api.branch_no || "",
+      // şubeNo burada tutulmuyor artık
     };
   }
 
@@ -149,17 +153,6 @@ export default function MusteriBilgiSorgulama() {
   function onBack() { navigate(-1); }
   function onPrint() { window.print(); }
   async function safeJson(res: Response) { try { return await res.json(); } catch { return null; } }
-
-  const dovizChip = useMemo(() => {
-    const code = accounts[0]?.currency_code || "—";
-    return <Chip size="small" label={`Döviz: ${code}`} />;
-  }, [accounts]);
-
-  const hesapTipiChip = useMemo(() => {
-    const tip = accounts[0]?.account_type === "VADELI" ? "Vadeli" :
-                accounts[0]?.account_type === "VADESIZ" ? "Vadesiz" : "—";
-    return <Chip size="small" label={`Hesap: ${tip}`} />;
-  }, [accounts]);
 
   return (
     <Container
@@ -215,7 +208,7 @@ export default function MusteriBilgiSorgulama() {
               <Grid item xs={12} md={6} lg={4}><Field label="Baba Adı" value={customer?.babaAdi} /></Grid>
               <Grid item xs={12} md={6} lg={4}><Field label="Telefon" value={customer?.telefon} /></Grid>
               <Grid item xs={12} md={6} lg={4}><Field label="E-posta" value={customer?.email} /></Grid>
-              <Grid item xs={12} md={6} lg={4}><Field label="Şube No" value={customer?.subeNo} /></Grid>
+              {/* Şube No kaldırıldı */}
               <Grid item xs={12}><Field label="Adres" value={customer?.adres} /></Grid>
             </Grid>
           </CardContent>
@@ -226,10 +219,6 @@ export default function MusteriBilgiSorgulama() {
           <CardHeader
             avatar={<AccountBalanceWalletRoundedIcon color="primary" />}
             title="Hesap Bilgileri"
-            action={
-              <Stack direction="row" spacing={1}>
-              </Stack>
-            }
           />
           <CardContent>
             {accounts?.length ? (
@@ -238,6 +227,7 @@ export default function MusteriBilgiSorgulama() {
                   <TableHead>
                     <TableRow>
                       <TableCell>Hesap No</TableCell>
+                      <TableCell>Şube No</TableCell> {/* YENİ: dövizden üretiliyor */}
                       <TableCell>Döviz</TableCell>
                       <TableCell align="right">Bakiye</TableCell>
                       <TableCell>Hesap Tipi</TableCell>
@@ -250,6 +240,7 @@ export default function MusteriBilgiSorgulama() {
                     {accounts.map((a) => (
                       <TableRow key={a.account_no}>
                         <TableCell>{a.account_no}</TableCell>
+                        <TableCell>{subeNoFromCurrency(a.currency_code)}</TableCell>
                         <TableCell>{a.currency_code}</TableCell>
                         <TableCell align="right">{a.balance}</TableCell>
                         <TableCell>{a.account_type === "VADELI" ? "Vadeli" : "Vadesiz"}</TableCell>
@@ -277,3 +268,4 @@ export default function MusteriBilgiSorgulama() {
     </Container>
   );
 }
+
