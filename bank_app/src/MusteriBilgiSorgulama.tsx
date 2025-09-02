@@ -1,15 +1,33 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
-  Container, Card, CardHeader, CardContent, Grid, Box, Typography, Divider,
-  Stack, Button, Chip, TextField, Alert, Table, TableHead, TableRow, TableCell, TableBody
+  Container,
+  Card,
+  CardHeader,
+  CardContent,
+  Grid,
+  Box,
+  Typography,
+  Divider,
+  Stack,
+  Button,
+  Chip,
+  TextField,
+  Alert,
+  Table,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableBody,
 } from "@mui/material";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import PrintRoundedIcon from "@mui/icons-material/PrintRounded";
 import AccountCircleRoundedIcon from "@mui/icons-material/AccountCircleRounded";
 import AccountBalanceWalletRoundedIcon from "@mui/icons-material/AccountBalanceWalletRounded";
+import dayjs from "dayjs";
 
-const API_BASE = (import.meta as any)?.env?.VITE_API_URL || "http://localhost:3001";
+const API_BASE =
+  (import.meta as any)?.env?.VITE_API_URL || "http://localhost:3001";
 
 type CustomerAPI = {
   id: string;
@@ -58,8 +76,12 @@ type CustomerInfo = {
 function Field({ label, value }: { label: string; value?: string }) {
   return (
     <Box sx={{ p: 1 }}>
-      <Typography variant="caption" color="text.secondary">{label}</Typography>
-      <Typography variant="body1" sx={{ mt: 0.5 }}>{value && value.trim() !== "" ? value : "—"}</Typography>
+      <Typography variant="caption" color="text.secondary">
+        {label}
+      </Typography>
+      <Typography variant="body1" sx={{ mt: 0.5 }}>
+        {value && value.trim() !== "" ? value : "—"}
+      </Typography>
     </Box>
   );
 }
@@ -67,11 +89,16 @@ function Field({ label, value }: { label: string; value?: string }) {
 // Dövize göre şube no eşlemesi
 function subeNoFromCurrency(code?: string) {
   switch ((code || "").toUpperCase()) {
-    case "TRY": return "5001";
-    case "USD": return "5002";
-    case "EUR": return "5003";
-    case "GBP": return "5004";
-    default: return "—";
+    case "TRY":
+      return "5001";
+    case "USD":
+      return "5002";
+    case "EUR":
+      return "5003";
+    case "GBP":
+      return "5004";
+    default:
+      return "—";
   }
 }
 
@@ -113,8 +140,14 @@ export default function MusteriBilgiSorgulama() {
       ad: api.first_name || "",
       soyad: api.last_name || "",
       dogum: api.birth_date || "",
-      cinsiyet: api.gender === "K" ? "kadin" : api.gender === "E" ? "erkek" : undefined,
-      uyruk: api.nationality === "YABANCI" ? "yabanci" : api.nationality === "TR" ? "turk" : undefined,
+      cinsiyet:
+        api.gender === "K" ? "kadin" : api.gender === "E" ? "erkek" : undefined,
+      uyruk:
+        api.nationality === "YABANCI"
+          ? "yabanci"
+          : api.nationality === "TR"
+          ? "turk"
+          : undefined,
       anneAdi: api.mother_name || "",
       babaAdi: api.father_name || "",
       adres: api.address || "",
@@ -132,7 +165,9 @@ export default function MusteriBilgiSorgulama() {
     setErr("");
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/customers/summary?national_id=${tckn}`);
+      const res = await fetch(
+        `${API_BASE}/customers/summary?national_id=${tckn}`
+      );
       if (!res.ok) {
         if (res.status === 404) throw new Error("Müşteri bulunamadı");
         const data = await safeJson(res);
@@ -150,22 +185,54 @@ export default function MusteriBilgiSorgulama() {
     }
   }
 
-  function onBack() { navigate(-1); }
-  function onPrint() { window.print(); }
-  async function safeJson(res: Response) { try { return await res.json(); } catch { return null; } }
+  function onBack() {
+    navigate(-1);
+  }
+  function onPrint() {
+    window.print();
+  }
+  async function safeJson(res: Response) {
+    try {
+      return await res.json();
+    } catch {
+      return null;
+    }
+  }
 
   return (
     <Container
       maxWidth="lg"
-      sx={{ minHeight: "100vh", py: 6, display: "flex", alignItems: "flex-start", justifyContent: "center" }}
+      sx={{
+        minHeight: "100vh",
+        py: 6,
+        display: "flex",
+        alignItems: "flex-start",
+        justifyContent: "center",
+      }}
     >
       <Stack spacing={3} sx={{ width: "60%" }}>
         {/* Başlık + aksiyonlar */}
-        <Stack direction="row" justifyContent="space-between" alignItems="center">
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="center"
+        >
           <Typography variant="h4">Müşteri Bilgi Sorgulama</Typography>
           <Stack direction="row" spacing={1}>
-            <Button variant="outlined" startIcon={<ArrowBackRoundedIcon />} onClick={onBack}>Geri Dön</Button>
-            <Button variant="contained" startIcon={<PrintRoundedIcon />} onClick={onPrint}>Yazdır</Button>
+            <Button
+              variant="outlined"
+              startIcon={<ArrowBackRoundedIcon />}
+              onClick={onBack}
+            >
+              Geri Dön
+            </Button>
+            <Button
+              variant="contained"
+              startIcon={<PrintRoundedIcon />}
+              onClick={onPrint}
+            >
+              Yazdır
+            </Button>
           </Stack>
         </Stack>
 
@@ -177,39 +244,95 @@ export default function MusteriBilgiSorgulama() {
               <TextField
                 label="TCKN / VKN (11 hane)"
                 value={tcknQuery}
-                onChange={(e) => setTcknQuery(e.target.value.replace(/\D/g, "").slice(0, 11))}
+                onChange={(e) =>
+                  setTcknQuery(e.target.value.replace(/\D/g, "").slice(0, 11))
+                }
                 inputProps={{ inputMode: "numeric", pattern: "\\d{11}" }}
                 sx={{ flex: 1 }}
               />
-              <Button variant="contained" onClick={() => fetchSummary(tcknQuery)} disabled={loading}>
+              <Button
+                variant="contained"
+                onClick={() => fetchSummary(tcknQuery)}
+                disabled={loading}
+              >
                 {loading ? "Sorgulanıyor..." : "Sorgula"}
               </Button>
             </Stack>
-            {err && <Alert severity="error" sx={{ mt: 2 }}>{err}</Alert>}
+            {err && (
+              <Alert severity="error" sx={{ mt: 2 }}>
+                {err}
+              </Alert>
+            )}
           </CardContent>
         </Card>
 
         {/* Müşteri Bilgileri */}
         <Card>
-          <CardHeader avatar={<AccountCircleRoundedIcon color="primary" />} title="Müşteri Bilgileri" />
+          <CardHeader
+            avatar={<AccountCircleRoundedIcon color="primary" />}
+            title="Müşteri Bilgileri"
+          />
           <CardContent>
             <Grid container spacing={2}>
-              <Grid item xs={12} md={6} lg={4}><Field label="TCKN / VKN" value={customer?.tckn} /></Grid>
-              <Grid item xs={12} md={6} lg={4}><Field label="Ad" value={customer?.ad} /></Grid>
-              <Grid item xs={12} md={6} lg={4}><Field label="Soyad" value={customer?.soyad} /></Grid>
-              <Grid item xs={12} md={6} lg={4}><Field label="Doğum Tarihi" value={customer?.dogum} /></Grid>
               <Grid item xs={12} md={6} lg={4}>
-                <Field label="Cinsiyet" value={customer?.cinsiyet ? (customer.cinsiyet === "kadin" ? "Kadın" : "Erkek") : undefined} />
+                <Field label="TCKN / VKN" value={customer?.tckn} />
               </Grid>
               <Grid item xs={12} md={6} lg={4}>
-                <Field label="Uyruk" value={customer?.uyruk ? (customer.uyruk === "yabanci" ? "Yabancı" : "Türk") : undefined} />
+                <Field label="Ad" value={customer?.ad} />
               </Grid>
-              <Grid item xs={12} md={6} lg={4}><Field label="Anne Adı" value={customer?.anneAdi} /></Grid>
-              <Grid item xs={12} md={6} lg={4}><Field label="Baba Adı" value={customer?.babaAdi} /></Grid>
-              <Grid item xs={12} md={6} lg={4}><Field label="Telefon" value={customer?.telefon} /></Grid>
-              <Grid item xs={12} md={6} lg={4}><Field label="E-posta" value={customer?.email} /></Grid>
+              <Grid item xs={12} md={6} lg={4}>
+                <Field label="Soyad" value={customer?.soyad} />
+              </Grid>
+              <Grid item xs={12} md={6} lg={4}>
+                <Field
+                  label="Doğum Tarihi"
+                  value={
+                    customer?.dogum
+                      ? dayjs(customer.dogum).format("DD/MM/YYYY")
+                      : "—"
+                  }
+                />
+              </Grid>
+              <Grid item xs={12} md={6} lg={4}>
+                <Field
+                  label="Cinsiyet"
+                  value={
+                    customer?.cinsiyet
+                      ? customer.cinsiyet === "kadin"
+                        ? "Kadın"
+                        : "Erkek"
+                      : undefined
+                  }
+                />
+              </Grid>
+              <Grid item xs={12} md={6} lg={4}>
+                <Field
+                  label="Uyruk"
+                  value={
+                    customer?.uyruk
+                      ? customer.uyruk === "yabanci"
+                        ? "Yabancı"
+                        : "Türk"
+                      : undefined
+                  }
+                />
+              </Grid>
+              <Grid item xs={12} md={6} lg={4}>
+                <Field label="Anne Adı" value={customer?.anneAdi} />
+              </Grid>
+              <Grid item xs={12} md={6} lg={4}>
+                <Field label="Baba Adı" value={customer?.babaAdi} />
+              </Grid>
+              <Grid item xs={12} md={6} lg={4}>
+                <Field label="Telefon" value={customer?.telefon} />
+              </Grid>
+              <Grid item xs={12} md={6} lg={4}>
+                <Field label="E-posta" value={customer?.email} />
+              </Grid>
               {/* Şube No kaldırıldı */}
-              <Grid item xs={12}><Field label="Adres" value={customer?.adres} /></Grid>
+              <Grid item xs={12}>
+                <Field label="Adres" value={customer?.adres} />
+              </Grid>
             </Grid>
           </CardContent>
         </Card>
@@ -227,7 +350,8 @@ export default function MusteriBilgiSorgulama() {
                   <TableHead>
                     <TableRow>
                       <TableCell>Hesap No</TableCell>
-                      <TableCell>Şube No</TableCell> {/* YENİ: dövizden üretiliyor */}
+                      <TableCell>Şube No</TableCell>{" "}
+                      {/* YENİ: dövizden üretiliyor */}
                       <TableCell>Döviz</TableCell>
                       <TableCell align="right">Bakiye</TableCell>
                       <TableCell>Hesap Tipi</TableCell>
@@ -240,10 +364,14 @@ export default function MusteriBilgiSorgulama() {
                     {accounts.map((a) => (
                       <TableRow key={a.account_no}>
                         <TableCell>{a.account_no}</TableCell>
-                        <TableCell>{subeNoFromCurrency(a.currency_code)}</TableCell>
+                        <TableCell>
+                          {subeNoFromCurrency(a.currency_code)}
+                        </TableCell>
                         <TableCell>{a.currency_code}</TableCell>
                         <TableCell align="right">{a.balance}</TableCell>
-                        <TableCell>{a.account_type === "VADELI" ? "Vadeli" : "Vadesiz"}</TableCell>
+                        <TableCell>
+                          {a.account_type === "VADELI" ? "Vadeli" : "Vadesiz"}
+                        </TableCell>
                         <TableCell align="right">{a.interest_rate}</TableCell>
                         <TableCell>{a.sub_no ?? "—"}</TableCell>
                         <TableCell>{a.status}</TableCell>
@@ -251,7 +379,11 @@ export default function MusteriBilgiSorgulama() {
                     ))}
                   </TableBody>
                 </Table>
-                <Typography variant="caption" color="text.secondary" sx={{ mt: 2, display: "block" }}>
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{ mt: 2, display: "block" }}
+                >
                   Toplam hesap: {accounts.length}
                 </Typography>
               </>
@@ -259,7 +391,11 @@ export default function MusteriBilgiSorgulama() {
               <Typography color="text.secondary">Hesap bulunamadı.</Typography>
             )}
             <Divider sx={{ mt: 2 }} />
-            <Typography variant="caption" color="text.secondary" sx={{ mt: 2, display: "block" }}>
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              sx={{ mt: 2, display: "block" }}
+            >
               Bu sayfa yalnızca görüntüleme amaçlıdır. Değerler API’dan çekilir.
             </Typography>
           </CardContent>
@@ -268,4 +404,3 @@ export default function MusteriBilgiSorgulama() {
     </Container>
   );
 }
-

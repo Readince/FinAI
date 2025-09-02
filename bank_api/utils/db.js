@@ -1,6 +1,16 @@
 // utils/db.js
-import { Pool } from "pg";
+import { Pool, types } from "pg";
 import "dotenv/config";
+
+/**
+ * Postgres tip parser ayarları
+ *  - 1082 = DATE  → string olarak aynen döndür ("YYYY-MM-DD")
+ *  - 1114 = TIMESTAMP (TZ'siz) → default bırakıyoruz
+ *  - 1184 = TIMESTAMPTZ        → default bırakıyoruz
+ *
+ * Not: birth_date artık DATE olduğu için 1082 yeterli.
+ */
+types.setTypeParser(1082, (val) => val); // "2003-03-29" gibi gelir
 
 const {
   DATABASE_URL,
@@ -46,3 +56,4 @@ const db = {
 };
 
 export default db;
+
