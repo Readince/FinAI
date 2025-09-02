@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   Container,
@@ -11,7 +11,6 @@ import {
   Divider,
   Stack,
   Button,
-  Chip,
   TextField,
   Alert,
   Table,
@@ -43,17 +42,18 @@ type CustomerAPI = {
   address?: string | null;
   phone?: string | null;
   email?: string | null;
-  branch_no?: string | null;
+  branch_no?: string | null; // kullanılmıyor ama API'de olabilir
 };
 
 type AccountAPI = {
   currency_code: string;
-  balance: string; // "1000.00"
+  balance: string;
   account_type: "VADESIZ" | "VADELI";
-  interest_rate: string; // "0.00"
+  interest_rate: string;
   sub_no: number | null;
   account_no: string;
   status: string;
+  branch_code?: number | string; // ⬅️ backend JOIN ile gelsin
 };
 
 type SummaryAPI = { customer: CustomerAPI; accounts: AccountAPI[] };
@@ -70,7 +70,6 @@ type CustomerInfo = {
   adres?: string;
   telefon?: string;
   email?: string;
-  // subeNo kaldırıldı (hesap tarafına taşındı)
 };
 
 function Field({ label, value }: { label: string; value?: string }) {
@@ -86,22 +85,6 @@ function Field({ label, value }: { label: string; value?: string }) {
   );
 }
 
-// Dövize göre şube no eşlemesi
-function subeNoFromCurrency(code?: string) {
-  switch ((code || "").toUpperCase()) {
-    case "TRY":
-      return "5001";
-    case "USD":
-      return "5002";
-    case "EUR":
-      return "5003";
-    case "GBP":
-      return "5004";
-    default:
-      return "—";
-  }
-}
-
 export default function MusteriBilgiSorgulama() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -113,7 +96,6 @@ export default function MusteriBilgiSorgulama() {
   const [customer, setCustomer] = useState<CustomerInfo | undefined>();
   const [accounts, setAccounts] = useState<AccountAPI[]>([]);
 
-  // Route/localStorage'dan ön-dolum
   useEffect(() => {
     const state = (location.state as any) || {};
     if (state?.customer?.tckn) {
@@ -133,7 +115,6 @@ export default function MusteriBilgiSorgulama() {
     }
   }, [location.state]);
 
-  // API: backend -> frontend map
   function mapCustomer(api: CustomerAPI): CustomerInfo {
     return {
       tckn: api.national_id || "",
@@ -153,7 +134,6 @@ export default function MusteriBilgiSorgulama() {
       adres: api.address || "",
       telefon: api.phone || "",
       email: api.email || "",
-      // şubeNo burada tutulmuyor artık
     };
   }
 
@@ -211,7 +191,7 @@ export default function MusteriBilgiSorgulama() {
       }}
     >
       <Stack spacing={3} sx={{ width: "60%" }}>
-        {/* Başlık + aksiyonlar */}
+        {/* Başlık + Aksiyonlar */}
         <Stack
           direction="row"
           justifyContent="space-between"
@@ -329,7 +309,6 @@ export default function MusteriBilgiSorgulama() {
               <Grid item xs={12} md={6} lg={4}>
                 <Field label="E-posta" value={customer?.email} />
               </Grid>
-              {/* Şube No kaldırıldı */}
               <Grid item xs={12}>
                 <Field label="Adres" value={customer?.adres} />
               </Grid>
@@ -350,8 +329,7 @@ export default function MusteriBilgiSorgulama() {
                   <TableHead>
                     <TableRow>
                       <TableCell>Hesap No</TableCell>
-                      <TableCell>Şube No</TableCell>{" "}
-                      {/* YENİ: dövizden üretiliyor */}
+                      <TableCell>Şube No</TableCell>
                       <TableCell>Döviz</TableCell>
                       <TableCell align="right">Bakiye</TableCell>
                       <TableCell>Hesap Tipi</TableCell>
@@ -364,9 +342,8 @@ export default function MusteriBilgiSorgulama() {
                     {accounts.map((a) => (
                       <TableRow key={a.account_no}>
                         <TableCell>{a.account_no}</TableCell>
-                        <TableCell>
-                          {subeNoFromCurrency(a.currency_code)}
-                        </TableCell>
+                        <TableCell>{a.branch_code ?? "—"}</TableCell>{" "}
+                        {/* <-- direkt DB'den */}
                         <TableCell>{a.currency_code}</TableCell>
                         <TableCell align="right">{a.balance}</TableCell>
                         <TableCell>

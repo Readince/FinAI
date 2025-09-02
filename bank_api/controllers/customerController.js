@@ -16,10 +16,15 @@ export async function postCustomer(req, res) {
       default_account, // open_default_account=false ise null olabilir
     });
   } catch (e) {
-    if (e.message === "VALIDATION_TCKN")
+    if (e.message === "VALIDATION_TCKN") {
       return res.status(400).json({ msg: "TCKN 11 hane olmalı" });
-    if (e.message === "DUPLICATE_TCKN")
+    }
+    if (e.message === "DUPLICATE_TCKN") {
       return res.status(409).json({ msg: "Bu TCKN/VKN zaten kayıtlı" });
+    }
+    if (e.message === "BRANCH_REQUIRED") {
+      return res.status(400).json({ msg: "Şube seçimi zorunlu" });
+    }
     console.error(e);
     return res.status(500).json({ msg: "DB error" });
   }
@@ -39,3 +44,4 @@ export async function getSummaryHandler(req, res) {
     return res.status(500).json({ msg: "DB error" });
   }
 }
+

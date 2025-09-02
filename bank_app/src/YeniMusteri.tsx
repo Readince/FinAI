@@ -20,7 +20,10 @@ import {
   Button,
   Divider,
   Typography,
-  Switch, // <-- eklendi
+  Switch,
+  InputLabel,
+  Select,
+  MenuItem,
 } from "@mui/material";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
@@ -53,7 +56,8 @@ export default function YeniMusteri() {
     telefon: "",
     email: "",
     adres: "",
-    openDefaultAccount: true, // <-- eklendi (varsayılan: açık)
+    openDefaultAccount: true,
+    branchCode: "", // ⬅️ YENİ: şube seçimi (1..5)
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -65,7 +69,7 @@ export default function YeniMusteri() {
     let v = value;
 
     if (name === "tckn") {
-      v = value.replace(/\D/g, "").slice(0, 11); // sadece rakam/11 hane
+      v = value.replace(/\D/g, "").slice(0, 11);
     }
 
     setForm((f) => ({ ...f, [name]: v }));
@@ -89,6 +93,7 @@ export default function YeniMusteri() {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim()))
       e.email = "Geçerli bir e-posta girin";
     if (!form.adres.trim()) e.adres = "Adres gerekli";
+    if (!form.branchCode) e.branchCode = "Şube seçiniz"; // ⬅️ YENİ
     return e;
   }
 
@@ -117,9 +122,9 @@ export default function YeniMusteri() {
       mother_name: form.anneAdi || null,
       father_name: form.babaAdi || null,
       address: form.adres || null,
-      branch_no: null,
-      // kritik: backend'in beklediği anahtar
-      open_default_account: !!form.openDefaultAccount, // <-- eklendi
+      // branch_no artık kullanılmıyor; BE şubeyi branch_code/id ile alıyor
+      branch_code: form.branchCode ? Number(form.branchCode) : null, // ⬅️ YENİ
+      open_default_account: !!form.openDefaultAccount,
     };
   }
 
@@ -138,7 +143,6 @@ export default function YeniMusteri() {
       const res = await fetch(`${API_BASE}/customers`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        // auth kapalı olduğu için Authorization header yok
         body: JSON.stringify(toApiPayload()),
       });
 
@@ -149,7 +153,6 @@ export default function YeniMusteri() {
         throw new Error(msg);
       }
 
-      // Beklenen cevap: { customer, default_account }
       const customerId = data?.customer?.id ?? data?.id ?? "?";
       const ekNo =
         data?.default_account?.sub_no_str ??
@@ -164,7 +167,6 @@ export default function YeniMusteri() {
           : `Müşteri oluşturuldu (ID: ${customerId}).`
       );
 
-      // formu sıfırla (switch'i aynı bırakmak istersen onu koruyoruz)
       setForm((f) => ({
         tckn: "",
         ad: "",
@@ -178,7 +180,8 @@ export default function YeniMusteri() {
         telefon: "",
         email: "",
         adres: "",
-        openDefaultAccount: f.openDefaultAccount, // tercih korunuyor
+        openDefaultAccount: f.openDefaultAccount,
+        branchCode: f.branchCode, // son seçim kalsın istersen; sıfırlamak istersen "" yap
       }));
       setErrors({});
     } catch (err: any) {
@@ -386,6 +389,29 @@ export default function YeniMusteri() {
                     </RadioGroup>
                     <Typography variant="caption" color="error">
                       {errors.uyruk || " "}
+                    </Typography>
+                  </FormControl>
+                </Grid>
+
+                {/* Şube Seçimi (branch_code) */}
+                <Grid item xs={12} md={6}>
+                  <FormControl fullWidth error={!!errors.branchCode}>
+                    <InputLabel id="branch-label">Şube</InputLabel>
+                    <Select
+                      labelId="branch-label"
+                      label="Şube"
+                      name="branchCode"
+                      value={form.branchCode}
+                      onChange={onChange}
+                    >
+                      <MenuItem value="1">1 — Merkez (İstanbul/Beşiktaş)</MenuItem>
+                      <MenuItem value="2">2 — Anadolu (İstanbul/Kadıköy)</MenuItem>
+                      <MenuItem value="3">3 — Ege (İzmir/Konak)</MenuItem>
+                      <MenuItem value="4">4 — İç Anadolu (Ankara/Çankaya)</MenuItem>
+                      <MenuItem value="5">5 — Akdeniz (Antalya/Muratpaşa)</MenuItem>
+                    </Select>
+                    <Typography variant="caption" color="error">
+                      {errors.branchCode || " "}
                     </Typography>
                   </FormControl>
                 </Grid>
