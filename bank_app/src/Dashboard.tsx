@@ -68,15 +68,11 @@ export default function Dashboard() {
                     <MenuItem value="">
                       <em>— Seçin —</em>
                     </MenuItem>
-                    <MenuItem value="/yeni-musteri">
-                      Yeni Müşteri Kaydı
-                    </MenuItem>
-                    <MenuItem value="/hesap-islemleri">
-                      Hesap İşlemleri
-                    </MenuItem>
-                    <MenuItem value="/musteri-sorgu">
-                      Müşteri Bilgi Sorgulama
-                    </MenuItem>
+                    <MenuItem value="/yeni-musteri">Yeni Müşteri Kaydı</MenuItem>
+                    <MenuItem value="/hesap-islemleri">Hesap İşlemleri</MenuItem>
+                    <MenuItem value="/musteri-sorgu">Müşteri Bilgi Sorgulama</MenuItem>
+                    {/* YENİ: Hesap Kapatma */}
+                    <MenuItem value="/hesap-kapatma">Hesap Kapatma</MenuItem>
                   </Select>
                 </FormControl>
 
@@ -113,3 +109,4 @@ export default function Dashboard() {
     </>
   );
 }
+

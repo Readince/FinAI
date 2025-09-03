@@ -2,6 +2,7 @@
 import db from "../utils/db.js";
 
 export const AccountRepo = {
+  /* -------------------------- CREATE -------------------------- */
   async create(a, client = null) {
     const runner = client || db;
     const q = `
@@ -26,6 +27,7 @@ export const AccountRepo = {
     return rows[0];
   },
 
+  /* ----------------------- QUERY (LIST) ----------------------- */
   async listByCustomerId(customerId, client = null) {
     const runner = client || db;
     const { rows } = await runner.query(
@@ -52,5 +54,66 @@ export const AccountRepo = {
       [customerId]
     );
     return rows;
-  }
+  },
+
+  /* ------------------------ QUERY (ONE) ----------------------- */
+  // Kapanış servisi için; satırı kilitleyerek (FOR UPDATE) okur.
+  async findByIdForUpdate(id, client = null) {
+    const runner = client || db;
+    const { rows } = await runner.query(
+      `SELECT * FROM accounts WHERE id = $1 FOR UPDATE`,
+      [id]
+    );
+    return rows[0] || null;
+  },
+
+  // Basit ihtiyaçlar için kilitlemeden tekil getir (opsiyonel)
+  async findById(id, client = null) {
+    const runner = client || db;
+    const { rows } = await runner.query(
+      `SELECT * FROM accounts WHERE id = $1`,
+      [id]
+    );
+    return rows[0] || null;
+  },
+
+  /* ------------------------- MUTATIONS ------------------------ */
+  // Bakiyeyi artır (transfer hedefi için)
+  async addBalance(id, amount, client = null) {
+    const runner = client || db;
+    const { rows } = await runner.query(
+      `UPDATE accounts
+         SET balance = balance + $2
+       WHERE id = $1
+       RETURNING *`,
+      [id, Number(amount) || 0]
+    );
+    return rows[0];
+  },
+
+  // Kapat + bakiyeyi 0'la (0 bakiye senaryosunda da kullanılır)
+  async closeSetZero(id, client = null) {
+    const runner = client || db;
+    const { rows } = await runner.query(
+      `UPDATE accounts
+         SET status = 'CLOSED', balance = 0
+       WHERE id = $1
+       RETURNING *`,
+      [id]
+    );
+    return rows[0];
+  },
+
+  // Aynı işlev; serviste isim olarak daha açıklayıcı dursun diye ayrık tuttuk
+  async closeAndZero(id, client = null) {
+    const runner = client || db;
+    const { rows } = await runner.query(
+      `UPDATE accounts
+         SET status = 'CLOSED', balance = 0
+       WHERE id = $1
+       RETURNING *`,
+      [id]
+    );
+    return rows[0];
+  },
 };

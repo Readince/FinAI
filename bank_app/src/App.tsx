@@ -7,6 +7,8 @@ import MusteriBilgiSorgulama from "./MusteriBilgiSorgulama";
 import { useEffect } from "react";
 import type React from "react";
 import { scheduleLogout } from "./authTimer";
+import HesapKapatma from ".//HesapKapatma";
+
 
 function isTokenValid(token: string | null): boolean {
   if (!token) return false;
@@ -71,6 +73,14 @@ export default function App() {
           element={
             <RequireAuth>
               <MusteriBilgiSorgulama />
+            </RequireAuth>
+          }        
+        />
+         <Route
+          path="/hesap-kapatma"
+          element={
+            <RequireAuth>
+              <HesapKapatma />
             </RequireAuth>
           }
         />
