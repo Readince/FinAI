@@ -1,0 +1,53 @@
+services:
+  # --- API (server) ---
+  api:
+    image: node:20-alpine
+    working_dir: /usr/src/app
+    command: sh -c "npm install --no-audit --no-fund --legacy-peer-deps && npm run dev"
+    ports:
+      - "3035:3000"               # host:container
+    volumes:
+      - ./bank_api:/usr/src/app   # <- bank_api klasörü mount
+      - api_node_modules:/usr/src/app/node_modules
+   
+    environment:
+      # Postgres env (kodunda process.env.* ile okuyacaksın)
+      PGHOST: host.docker.internal     
+      PGPORT: 5432
+      PGDATABASE: bank
+      PGUSER: postgres
+      PGPASSWORD: pass
+      DATABASE_URL: postgres://postgres:pass@host.docker.internal:5432/bank
+      REDIS_URL: redis://host.docker.internal:6379
+  # --- (opsiyonel) Frontend ---
+  app:
+    image: node:20-alpine
+    working_dir: /usr/src/app
+    command: sh -c "npm install --no-audit --no-fund --legacy-peer-deps && npm run dev"
+    ports:
+      - "5173:5173"               # Vite varsayılanı; projen farklıysa değiştir
+    volumes:
+      - ./bank_app:/usr/src/app   # <- bank_app klasörü mount
+      - app_node_modules:/usr/src/app/node_modules
+    depends_on:
+      - api
+
+  # --- Postgres ---
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: bankdb
+      POSTGRES_USER: appuser
+      POSTGRES_PASSWORD: apppass
+    ports:
+      - "5433:5432"
+
+  # --- Adminer (DB UI) ---
+  adminer:
+    image: adminer
+    ports:
+      - "8080:8080"
+
+volumes:
+  api_node_modules:
+  app_node_modules:

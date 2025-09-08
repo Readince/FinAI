@@ -25,6 +25,19 @@ import AccountCircleRoundedIcon from "@mui/icons-material/AccountCircleRounded";
 import AccountBalanceWalletRoundedIcon from "@mui/icons-material/AccountBalanceWalletRounded";
 import dayjs from "dayjs";
 
+function statusLabel(status: string) {
+  if (!status) return "";
+  switch (status.toUpperCase()) {
+    case "ACTIVE":
+      return "Açık";
+    case "CLOSED":
+      return "Kapalı";
+    default:
+      return status;
+  }
+}
+
+
 const API_BASE =
   (import.meta as any)?.env?.VITE_API_URL || "http://localhost:3001";
 
@@ -351,7 +364,7 @@ export default function MusteriBilgiSorgulama() {
                         </TableCell>
                         <TableCell align="right">{a.interest_rate}</TableCell>
                         <TableCell>{a.sub_no ?? "—"}</TableCell>
-                        <TableCell>{a.status}</TableCell>
+                        <TableCell>{statusLabel(a.status)}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>

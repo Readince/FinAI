@@ -393,29 +393,7 @@ export default function YeniMusteri() {
                   </FormControl>
                 </Grid>
 
-                {/* Şube Seçimi (branch_code) */}
-                <Grid item xs={12} md={6}>
-                  <FormControl fullWidth error={!!errors.branchCode}>
-                    <InputLabel id="branch-label">Şube</InputLabel>
-                    <Select
-                      labelId="branch-label"
-                      label="Şube"
-                      name="branchCode"
-                      value={form.branchCode}
-                      onChange={onChange}
-                    >
-                      <MenuItem value="1">1 — Merkez (İstanbul/Beşiktaş)</MenuItem>
-                      <MenuItem value="2">2 — Anadolu (İstanbul/Kadıköy)</MenuItem>
-                      <MenuItem value="3">3 — Ege (İzmir/Konak)</MenuItem>
-                      <MenuItem value="4">4 — İç Anadolu (Ankara/Çankaya)</MenuItem>
-                      <MenuItem value="5">5 — Akdeniz (Antalya/Muratpaşa)</MenuItem>
-                    </Select>
-                    <Typography variant="caption" color="error">
-                      {errors.branchCode || " "}
-                    </Typography>
-                  </FormControl>
-                </Grid>
-
+            
                 {/* Anne/Baba Adı */}
                 <Grid item xs={12} md={6}>
                   <TextField
@@ -441,6 +419,35 @@ export default function YeniMusteri() {
                     helperText={errors.babaAdi || " "}
                     placeholder="Örn: Ahmet"
                   />
+                </Grid>
+
+                  {/* Şube Seçimi (branch_code) */}
+                <Grid item xs={12} md={6}
+                    sx={{
+                    flexBasis: "98% !important",
+                    maxWidth: "98% !important",
+                  }}
+                
+                >
+                  <FormControl fullWidth error={!!errors.branchCode}>
+                    <InputLabel id="branch-label">Şube</InputLabel>
+                    <Select
+                      labelId="branch-label"
+                      label="Şube"
+                      name="branchCode"
+                      value={form.branchCode}
+                      onChange={onChange}
+                    >
+                      <MenuItem value="1">1 — Merkez (İstanbul/Beşiktaş)</MenuItem>
+                      <MenuItem value="2">2 — Anadolu (İstanbul/Kadıköy)</MenuItem>
+                      <MenuItem value="3">3 — Ege (İzmir/Konak)</MenuItem>
+                      <MenuItem value="4">4 — İç Anadolu (Ankara/Çankaya)</MenuItem>
+                      <MenuItem value="5">5 — Akdeniz (Antalya/Muratpaşa)</MenuItem>
+                    </Select>
+                    <Typography variant="caption" color="error">
+                      {errors.branchCode || " "}
+                    </Typography>
+                  </FormControl>
                 </Grid>
 
                 {/* Adres */}

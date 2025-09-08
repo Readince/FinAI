@@ -8,6 +8,7 @@ import { useEffect } from "react";
 import type React from "react";
 import { scheduleLogout } from "./authTimer";
 import HesapKapatma from ".//HesapKapatma";
+import SubeMusteriListesi from "./SubeMusteriListesi";
 
 
 function isTokenValid(token: string | null): boolean {
@@ -81,6 +82,14 @@ export default function App() {
           element={
             <RequireAuth>
               <HesapKapatma />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/sube-musteri-listesi"
+          element={
+            <RequireAuth>
+              <SubeMusteriListesi/>
             </RequireAuth>
           }
         />

@@ -10,7 +10,7 @@ const ok = await validateUser(tckn, password);
 if (!ok) return null;
 
 const { token, jti } = signAccessToken({ sub: tckn });
-const ttl = Number(process.env.JWT_EXPIRES_SECONDS || 20);
+const ttl = Number(process.env.JWT_EXPIRES_SECONDS);
 
 // Token süresi kadar session tut
 await redis.set(`${SESSION_PREFIX}${jti}`, tckn, { EX: ttl });

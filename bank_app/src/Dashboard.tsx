@@ -73,6 +73,7 @@ export default function Dashboard() {
                     <MenuItem value="/musteri-sorgu">Müşteri Bilgi Sorgulama</MenuItem>
                     {/* YENİ: Hesap Kapatma */}
                     <MenuItem value="/hesap-kapatma">Hesap Kapatma</MenuItem>
+                    <MenuItem value="/sube-musteri-listesi">Şube Müşteri Listesi</MenuItem>
                   </Select>
                 </FormControl>
 

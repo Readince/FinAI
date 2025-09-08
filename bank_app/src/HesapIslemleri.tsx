@@ -180,6 +180,7 @@ export default function HesapIslemleri() {
   }
 
   const faizDisabled = form.hesapTipi === "vadesiz";
+  const gunSayisiDisabled = form.hesapTipi == 'vadesiz';
 
   // --- Hesaplama (Basit faiz, 365 gün esası) ---
   const { hesaplananFaiz, toplamTutar } = useMemo(() => {
@@ -294,9 +295,11 @@ export default function HesapIslemleri() {
               {/* Gün Sayısı (UI hesap) */}
               <Grid item xs={12} md={6}>
                 <TextField
+                  
                   fullWidth label="Gün Sayısı" name="gunSayisi" value={form.gunSayisi} onChange={onChange}
-                  error={!!errors.gunSayisi} helperText={errors.gunSayisi || "Basit faiz: 365 gün esas alınır"}
-                  sx={{ width: "13vw" }} placeholder="Örn: 30" type="number"
+                  error={!!errors.gunSayisi} helperText={errors.gunSayisi ||  "Basit faiz: 365 gün esas alınır"}
+                  sx={{ width: "14vw" }} placeholder="Örn: 30" type="number"
+                  disabled={gunSayisiDisabled}
                   inputProps={{ inputMode: "numeric", min: 0, step: 1 }}
                 />
               </Grid>
