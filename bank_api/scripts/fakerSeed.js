@@ -51,7 +51,7 @@ function randAccountNo() {
   return acc;
 }
 
-async function seedCustomers(total = 1000) {
+async function seedCustomers(total = 10000) {
   console.time("seed");
   const client = await db.getClient();
   try {
@@ -181,6 +181,5 @@ async function seedCustomers(total = 1000) {
   }
 }
 
-// CLI: node scripts/seed.js 1200  |  npm run seed
-const total = Number(process.argv[2] || 1000);
+const total = Number(process.argv[2] || 10000);
 seedCustomers(total);

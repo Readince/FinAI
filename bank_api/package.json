@@ -10,7 +10,7 @@
     "seed": "node services/seedUsers.js",
     "db:psql": "psql \"$DATABASE_URL\"",
     "db:init": "psql \"$DATABASE_URL\" -f migrations/001_init.sql",
-    "fakerSeed": "node scripts/fakerSeed.js 1000"
+    "fakerSeed": "node scripts/fakerSeed.js 10000"
   },
   "author": "Alirıza",
   "license": "ISC",
