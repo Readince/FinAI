@@ -4,7 +4,7 @@ import { postAccount, closeAccount } from "../controllers/accountController.js";
 
 const r = Router();
 // r.post("/", auth, postAccount);
-r.post("/", postAccount);                      // ✅ auth yok
+r.post("/", postAccount); // ✅ auth yok
 
 // NEW: hesap kapatma
 r.post("/:id/close", closeAccount);

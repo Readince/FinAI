@@ -1,6 +1,10 @@
 export async function apiFetch(input: RequestInfo, init: RequestInit = {}) {
   const doFetch = (headers?: Headers) =>
-    fetch(input, { credentials: "include", ...init, ...(headers ? { headers } : {}) });
+    fetch(input, {
+      credentials: "include",
+      ...init,
+      ...(headers ? { headers } : {}),
+    });
 
   let res = await doFetch(init.headers as Headers);
   if (res.status !== 401) return res;

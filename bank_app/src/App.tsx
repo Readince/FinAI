@@ -10,7 +10,6 @@ import { scheduleLogout } from "./authTimer";
 import HesapKapatma from ".//HesapKapatma";
 import SubeMusteriListesi from "./SubeMusteriListesi";
 
-
 function isTokenValid(token: string | null): boolean {
   if (!token) return false;
   try {
@@ -75,9 +74,9 @@ export default function App() {
             <RequireAuth>
               <MusteriBilgiSorgulama />
             </RequireAuth>
-          }        
+          }
         />
-         <Route
+        <Route
           path="/hesap-kapatma"
           element={
             <RequireAuth>
@@ -89,7 +88,7 @@ export default function App() {
           path="/sube-musteri-listesi"
           element={
             <RequireAuth>
-              <SubeMusteriListesi/>
+              <SubeMusteriListesi />
             </RequireAuth>
           }
         />
@@ -98,6 +97,3 @@ export default function App() {
     </BrowserRouter>
   );
 }
-
-
-

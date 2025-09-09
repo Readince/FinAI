@@ -1,9 +1,22 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Container, Card, CardHeader, CardContent, Grid, Box, TextField,
-  FormControl, InputLabel, Select, MenuItem, Stack, Button, Divider,
-  Typography, InputAdornment
+  Container,
+  Card,
+  CardHeader,
+  CardContent,
+  Grid,
+  Box,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Stack,
+  Button,
+  Divider,
+  Typography,
+  InputAdornment,
 } from "@mui/material";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
@@ -44,7 +57,11 @@ export default function HesapIslemleri() {
         faiz: value === "vadesiz" ? "0" : f.faiz || "0",
       }));
       setMessage("");
-      setErrors((p) => ({ ...p, hesapTipi: undefined as any, faiz: undefined as any }));
+      setErrors((p) => ({
+        ...p,
+        hesapTipi: undefined as any,
+        faiz: undefined as any,
+      }));
       return;
     }
 
@@ -99,7 +116,11 @@ export default function HesapIslemleri() {
     if (!/^\d{11}$/.test(form.tckn)) e.tckn = "TCKN/VKN 11 haneli olmalı";
     if (!form.doviz) e.doviz = "Döviz kodu seçiniz";
 
-    if (form.bakiye === "" || isNaN(Number(form.bakiye)) || Number(form.bakiye) < 0) {
+    if (
+      form.bakiye === "" ||
+      isNaN(Number(form.bakiye)) ||
+      Number(form.bakiye) < 0
+    ) {
       e.bakiye = "Geçerli bir bakiye giriniz";
     }
 
@@ -117,7 +138,8 @@ export default function HesapIslemleri() {
     // gün sayısı opsiyonel; dolu ise kontrol et
     if (form.gunSayisi !== "") {
       const d = Number(form.gunSayisi);
-      if (!Number.isInteger(d) || d < 0) e.gunSayisi = "Gün sayısı 0 veya pozitif tam sayı olmalı";
+      if (!Number.isInteger(d) || d < 0)
+        e.gunSayisi = "Gün sayısı 0 veya pozitif tam sayı olmalı";
     }
 
     return e;
@@ -171,7 +193,11 @@ export default function HesapIslemleri() {
   }
 
   async function safeJson(res: Response) {
-    try { return await res.json(); } catch { return null; }
+    try {
+      return await res.json();
+    } catch {
+      return null;
+    }
   }
 
   function logout() {
@@ -180,13 +206,13 @@ export default function HesapIslemleri() {
   }
 
   const faizDisabled = form.hesapTipi === "vadesiz";
-  const gunSayisiDisabled = form.hesapTipi == 'vadesiz';
+  const gunSayisiDisabled = form.hesapTipi == "vadesiz";
 
   // --- Hesaplama (Basit faiz, 365 gün esası) ---
   const { hesaplananFaiz, toplamTutar } = useMemo(() => {
     const balance = Number(form.bakiye) || 0;
     const days = Number(form.gunSayisi) || 0;
-    const rate = form.hesapTipi === "vadesiz" ? 0 : (Number(form.faiz) || 0);
+    const rate = form.hesapTipi === "vadesiz" ? 0 : Number(form.faiz) || 0;
     const faizTutari = balance * (rate / 100) * (days / 365);
     return {
       hesaplananFaiz: isFinite(faizTutari) ? faizTutari : 0,
@@ -209,13 +235,23 @@ export default function HesapIslemleri() {
   return (
     <Container
       maxWidth="md"
-      sx={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", py: 6 }}
+      sx={{
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        py: 6,
+      }}
     >
       <Card sx={{ width: "60%" }}>
         <CardHeader
           title="Hesap Oluştur"
           action={
-            <Button onClick={logout} color="error" startIcon={<LogoutRoundedIcon />}>
+            <Button
+              onClick={logout}
+              color="error"
+              startIcon={<LogoutRoundedIcon />}
+            >
               Çıkış Yap
             </Button>
           }
@@ -226,10 +262,16 @@ export default function HesapIslemleri() {
               {/* TCKN */}
               <Grid item xs={12} md={6}>
                 <TextField
-                  fullWidth label="TCKN / VKN (11 hane)" name="tckn" value={form.tckn} onChange={onChange}
-                  error={!!errors.tckn} helperText={errors.tckn || " "}
+                  fullWidth
+                  label="TCKN / VKN (11 hane)"
+                  name="tckn"
+                  value={form.tckn}
+                  onChange={onChange}
+                  error={!!errors.tckn}
+                  helperText={errors.tckn || " "}
                   inputProps={{ inputMode: "numeric", pattern: "\\d{11}" }}
-                  placeholder="12345678901" sx={{ width: "13vw" }}
+                  placeholder="12345678901"
+                  sx={{ width: "13vw" }}
                 />
               </Grid>
 
@@ -238,26 +280,42 @@ export default function HesapIslemleri() {
                 <FormControl fullWidth error={!!errors.hesapTipi}>
                   <InputLabel id="hesapTipi-label">Hesap Tipi</InputLabel>
                   <Select
-                    labelId="hesapTipi-label" id="hesapTipi" name="hesapTipi"
-                    value={form.hesapTipi} label="Hesap Tipi" onChange={onChange}
+                    labelId="hesapTipi-label"
+                    id="hesapTipi"
+                    name="hesapTipi"
+                    value={form.hesapTipi}
+                    label="Hesap Tipi"
+                    onChange={onChange}
                     sx={{ width: "14vw" }}
                   >
                     <MenuItem value="vadesiz">Vadesiz</MenuItem>
                     <MenuItem value="vadeli">Vadeli</MenuItem>
                   </Select>
-                  <Typography variant="caption" color="error">{errors.hesapTipi || " "}</Typography>
+                  <Typography variant="caption" color="error">
+                    {errors.hesapTipi || " "}
+                  </Typography>
                 </FormControl>
               </Grid>
 
               {/* Bakiye */}
               <Grid item xs={12} md={6}>
                 <TextField
-                  fullWidth label="Bakiye Tutarı" name="bakiye" value={form.bakiye} onChange={onChange}
-                  error={!!errors.bakiye} helperText={errors.bakiye || " "}
-                  placeholder="0.00" inputProps={{ inputMode: "decimal" }}
+                  fullWidth
+                  label="Bakiye Tutarı"
+                  name="bakiye"
+                  value={form.bakiye}
+                  onChange={onChange}
+                  error={!!errors.bakiye}
+                  helperText={errors.bakiye || " "}
+                  placeholder="0.00"
+                  inputProps={{ inputMode: "decimal" }}
                   sx={{ width: "13vw" }}
                   InputProps={{
-                    startAdornment: <InputAdornment position="start">{form.doviz}</InputAdornment>,
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        {form.doviz}
+                      </InputAdornment>
+                    ),
                   }}
                 />
               </Grid>
@@ -267,38 +325,71 @@ export default function HesapIslemleri() {
                 <FormControl fullWidth error={!!errors.doviz}>
                   <InputLabel id="doviz-label">Döviz Kodu</InputLabel>
                   <Select
-                    labelId="doviz-label" id="doviz" name="doviz" value={form.doviz}
-                    label="Döviz Kodu" onChange={onChange} sx={{ width: "14vw" }}
+                    labelId="doviz-label"
+                    id="doviz"
+                    name="doviz"
+                    value={form.doviz}
+                    label="Döviz Kodu"
+                    onChange={onChange}
+                    sx={{ width: "14vw" }}
                   >
                     <MenuItem value="TRY">TRY</MenuItem>
                     <MenuItem value="USD">USD</MenuItem>
                     <MenuItem value="EUR">EUR</MenuItem>
                     <MenuItem value="GBP">GBP</MenuItem>
                   </Select>
-                  <Typography variant="caption" color="error">{errors.doviz || " "}</Typography>
+                  <Typography variant="caption" color="error">
+                    {errors.doviz || " "}
+                  </Typography>
                 </FormControl>
               </Grid>
 
               {/* Faiz */}
               <Grid item xs={12} md={6}>
                 <TextField
-                  fullWidth label="Faiz Oranı" name="faiz" value={form.faiz} onChange={onChange}
+                  fullWidth
+                  label="Faiz Oranı"
+                  name="faiz"
+                  value={form.faiz}
+                  onChange={onChange}
                   error={!!errors.faiz}
-                  helperText={errors.faiz || (faizDisabled ? "Vadesiz hesapta faiz 0’dır" : "0–50")}
-                  placeholder="0" sx={{ width: "13vw" }} type="number"
-                  inputProps={{ inputMode: "decimal", step: "0.01", min: 0, max: 50 }}
+                  helperText={
+                    errors.faiz ||
+                    (faizDisabled ? "Vadesiz hesapta faiz 0’dır" : "0–50")
+                  }
+                  placeholder="0"
+                  sx={{ width: "13vw" }}
+                  type="number"
+                  inputProps={{
+                    inputMode: "decimal",
+                    step: "0.01",
+                    min: 0,
+                    max: 50,
+                  }}
                   disabled={faizDisabled}
-                  InputProps={{ endAdornment: <InputAdornment position="end">%</InputAdornment> }}
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">%</InputAdornment>
+                    ),
+                  }}
                 />
               </Grid>
 
               {/* Gün Sayısı (UI hesap) */}
               <Grid item xs={12} md={6}>
                 <TextField
-                  
-                  fullWidth label="Gün Sayısı" name="gunSayisi" value={form.gunSayisi} onChange={onChange}
-                  error={!!errors.gunSayisi} helperText={errors.gunSayisi ||  "Basit faiz: 365 gün esas alınır"}
-                  sx={{ width: "14vw" }} placeholder="Örn: 30" type="number"
+                  fullWidth
+                  label="Gün Sayısı"
+                  name="gunSayisi"
+                  value={form.gunSayisi}
+                  onChange={onChange}
+                  error={!!errors.gunSayisi}
+                  helperText={
+                    errors.gunSayisi || "Basit faiz: 365 gün esas alınır"
+                  }
+                  sx={{ width: "14vw" }}
+                  placeholder="Örn: 30"
+                  type="number"
                   disabled={gunSayisiDisabled}
                   inputProps={{ inputMode: "numeric", min: 0, step: 1 }}
                 />
@@ -327,11 +418,25 @@ export default function HesapIslemleri() {
 
               {/* Butonlar + Mesaj */}
               <Grid item xs={12}>
-                <Stack direction="row" spacing={2} justifyContent="space-between">
-                  <Button type="button" variant="outlined" startIcon={<ArrowBackRoundedIcon />} onClick={() => navigate(-1)}>
+                <Stack
+                  direction="row"
+                  spacing={2}
+                  justifyContent="space-between"
+                >
+                  <Button
+                    type="button"
+                    variant="outlined"
+                    startIcon={<ArrowBackRoundedIcon />}
+                    onClick={() => navigate(-1)}
+                  >
                     Geri Dön
                   </Button>
-                  <Button type="submit" variant="contained" endIcon={<CheckCircleRoundedIcon />} disabled={saving}>
+                  <Button
+                    type="submit"
+                    variant="contained"
+                    endIcon={<CheckCircleRoundedIcon />}
+                    disabled={saving}
+                  >
                     {saving ? "Kaydediliyor..." : "Hesabı Oluştur"}
                   </Button>
                 </Stack>
@@ -340,7 +445,11 @@ export default function HesapIslemleri() {
               {message && (
                 <Grid item xs={12}>
                   <Divider sx={{ my: 1 }} />
-                  <Typography color={message.startsWith("Hata") ? "error" : "success.main"}>
+                  <Typography
+                    color={
+                      message.startsWith("Hata") ? "error" : "success.main"
+                    }
+                  >
                     {message}
                   </Typography>
                 </Grid>

@@ -141,7 +141,10 @@ app.post("/ai/chat", async (req, res) => {
 
       let content = "";
       if (!resultRows?.length) {
-        content = `Kayıt bulunamadı (TC: ${normTc.slice(0, 2)}*******${normTc.slice(-2)}).`;
+        content = `Kayıt bulunamadı (TC: ${normTc.slice(
+          0,
+          2
+        )}*******${normTc.slice(-2)}).`;
       } else {
         content = resultRows
           .map(
@@ -161,7 +164,9 @@ app.post("/ai/chat", async (req, res) => {
         })}\n\n`
       );
       res.write(
-        `data: ${JSON.stringify({ message: { role: "assistant", content } })}\n\n`
+        `data: ${JSON.stringify({
+          message: { role: "assistant", content },
+        })}\n\n`
       );
       res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
       return res.end();

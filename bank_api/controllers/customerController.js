@@ -1,6 +1,6 @@
 // controllers/customerController.js
 import { createCustomer, getSummary } from "../services/customerService.js";
-import { CustomerRepo } from "../repositories/CustomerRepo.js"; // ✅ C/Büyük harfe dikkat
+import { CustomerRepo } from "../repositories/CustomerRepo.js";
 
 export async function postCustomer(req, res) {
   try {

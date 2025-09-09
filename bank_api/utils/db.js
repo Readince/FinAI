@@ -27,7 +27,9 @@ const useUrl = !!DATABASE_URL;
 const pool = useUrl
   ? new Pool({
       connectionString: DATABASE_URL,
-      ssl: /^(require|on|true)$/i.test(PGSSLMODE) ? { rejectUnauthorized: false } : false,
+      ssl: /^(require|on|true)$/i.test(PGSSLMODE)
+        ? { rejectUnauthorized: false }
+        : false,
       keepAlive: true,
       idleTimeoutMillis: 10_000,
       connectionTimeoutMillis: 5_000,
@@ -39,7 +41,9 @@ const pool = useUrl
       user: PGUSER,
       password: PGPASSWORD,
       database: PGDATABASE,
-      ssl: /^(require|on|true)$/i.test(PGSSLMODE) ? { rejectUnauthorized: false } : false,
+      ssl: /^(require|on|true)$/i.test(PGSSLMODE)
+        ? { rejectUnauthorized: false }
+        : false,
       keepAlive: true,
       idleTimeoutMillis: 10_000,
       connectionTimeoutMillis: 5_000,
@@ -56,4 +60,3 @@ const db = {
 };
 
 export default db;
-

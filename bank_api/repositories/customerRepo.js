@@ -29,9 +29,9 @@ export const CustomerRepo = {
       c.mother_name ?? null,
       c.father_name ?? null,
       c.address ?? null,
-      c.branch_no ?? null,      // eski kolon
-      c.branch_code ?? null,    // $14
-      c.branch_id ?? null       // $15
+      c.branch_no ?? null, // eski kolon
+      c.branch_code ?? null, // $14
+      c.branch_id ?? null, // $15
     ];
 
     const { rows } = await runner.query(q, params);
@@ -135,7 +135,9 @@ export const CustomerRepo = {
       params.push(Number(branch_id));
     }
     if (q) {
-      whereParts.push(`(c.national_id ILIKE $${i} OR c.first_name ILIKE $${i} OR c.last_name ILIKE $${i})`);
+      whereParts.push(
+        `(c.national_id ILIKE $${i} OR c.first_name ILIKE $${i} OR c.last_name ILIKE $${i})`
+      );
       params.push(`%${q}%`);
       i++;
     }
@@ -207,7 +209,9 @@ export const CustomerRepo = {
       params.push(Number(branch_id));
     }
     if (q) {
-      whereParts.push(`(c.national_id ILIKE $${i} OR c.first_name ILIKE $${i} OR c.last_name ILIKE $${i})`);
+      whereParts.push(
+        `(c.national_id ILIKE $${i} OR c.first_name ILIKE $${i} OR c.last_name ILIKE $${i})`
+      );
       params.push(`%${q}%`);
       i++;
     }
@@ -241,8 +245,12 @@ export const CustomerRepo = {
       ORDER BY f.id DESC
       LIMIT $${i++} OFFSET $${i++}
     `;
-    const idsRes = await db.query(idsSql, [...params, Number(limit), Number(offset)]);
-    const pageIds = idsRes.rows.map(r => r.id);
+    const idsRes = await db.query(idsSql, [
+      ...params,
+      Number(limit),
+      Number(offset),
+    ]);
+    const pageIds = idsRes.rows.map((r) => r.id);
     const total = idsRes.rows[0]?.total ?? 0;
 
     if (pageIds.length === 0) return { items: [], total };

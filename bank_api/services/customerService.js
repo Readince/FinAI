@@ -44,10 +44,7 @@ export async function createCustomer(dto, { openDefault = false } = {}) {
     if (!branch_id) throw new Error("BRANCH_REQUIRED");
 
     // Müşteriyi oluştur (repo create branch_id’yi kabul ediyor)
-    const customer = await CustomerRepo.create(
-      { ...dto, branch_id },
-      client
-    );
+    const customer = await CustomerRepo.create({ ...dto, branch_id }, client);
 
     let default_account = null;
     if (openDefault) {

@@ -13,11 +13,11 @@ import { validateUser } from "../models/usermodel.js"; // varsa kalsın
 const router = express.Router();
 
 const USER_PREFIX = "user:"; // user:{tckn} -> bcrypt hash
-const RT_PREFIX   = "rtk:";  // rtk:{jti}  -> sub(tckn)
+const RT_PREFIX = "rtk:"; // rtk:{jti}  -> sub(tckn)
 
 const cookieOpts = {
   httpOnly: true,
-  secure: false,     // PROD'da true + app.set("trust proxy", 1) + sameSite:"none"
+  secure: false, // PROD'da true + app.set("trust proxy", 1) + sameSite:"none"
   sameSite: "lax",
   path: "/",
 };
@@ -30,11 +30,15 @@ router.post("/signup", async (req, res) => {
   try {
     const { username: tckn, password } = req.body || {};
     if (!isValidTckn(tckn) || !isValidPass(password)) {
-      return res.status(400).json({ success: false, message: "Geçersiz TCKN/şifre" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Geçersiz TCKN/şifre" });
     }
     const key = `${USER_PREFIX}${tckn}`;
     if (await redis.exists(key)) {
-      return res.status(409).json({ success: false, message: "Kullanıcı zaten var" });
+      return res
+        .status(409)
+        .json({ success: false, message: "Kullanıcı zaten var" });
     }
     const hash = await bcrypt.hash(password, 10);
     await redis.set(key, hash);
@@ -50,7 +54,9 @@ router.post("/login", async (req, res) => {
   try {
     const { username: tckn, password } = req.body || {};
     if (!isValidTckn(tckn) || !isValidPass(password)) {
-      return res.status(400).json({ success: false, message: "Geçersiz TCKN/şifre" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Geçersiz TCKN/şifre" });
     }
 
     const key = `${USER_PREFIX}${tckn}`;
@@ -63,14 +69,24 @@ router.post("/login", async (req, res) => {
       ok = await validateUser(tckn, password);
     }
     if (!ok) {
-      return res.status(401).json({ success: false, message: "Geçersiz kimlik bilgileri" });
+      return res
+        .status(401)
+        .json({ success: false, message: "Geçersiz kimlik bilgileri" });
     }
 
     // Access
-    const { token: at, jti: atJti, expiresIn: atExp } = signAccessToken({ sub: tckn });
+    const {
+      token: at,
+      jti: atJti,
+      expiresIn: atExp,
+    } = signAccessToken({ sub: tckn });
 
     // Refresh → Redis + Cookie
-    const { token: rt, jti: rtJti, expiresIn: rtExp } = signRefreshToken({ sub: tckn });
+    const {
+      token: rt,
+      jti: rtJti,
+      expiresIn: rtExp,
+    } = signRefreshToken({ sub: tckn });
     await redis.set(`${RT_PREFIX}${rtJti}`, tckn, { EX: rtExp });
     res.cookie("refresh_token", rt, { ...cookieOpts, maxAge: rtExp * 1000 });
 
@@ -85,30 +101,51 @@ router.post("/login", async (req, res) => {
 router.post("/refresh", async (req, res) => {
   try {
     const rt = req.cookies?.refresh_token;
-    if (!rt) return res.status(401).json({ success: false, message: "Refresh yok" });
+    if (!rt)
+      return res.status(401).json({ success: false, message: "Refresh yok" });
 
     let payload;
     try {
       payload = verifyRefreshToken(rt); // { sub, jti, iat, exp }
     } catch {
-      return res.status(401).json({ success: false, message: "Refresh geçersiz/expired" });
+      return res
+        .status(401)
+        .json({ success: false, message: "Refresh geçersiz/expired" });
     }
 
     const key = `${RT_PREFIX}${payload.jti}`;
     const subInRedis = await redis.get(key);
     if (!subInRedis || subInRedis !== payload.sub) {
-      return res.status(401).json({ success: false, message: "Refresh tanınmıyor" });
+      return res
+        .status(401)
+        .json({ success: false, message: "Refresh tanınmıyor" });
     }
 
     // Rotate RT
     await redis.del(key);
-    const { token: newRt, jti: newRtJti, expiresIn: newRtExp } = signRefreshToken({ sub: payload.sub });
+    const {
+      token: newRt,
+      jti: newRtJti,
+      expiresIn: newRtExp,
+    } = signRefreshToken({ sub: payload.sub });
     await redis.set(`${RT_PREFIX}${newRtJti}`, payload.sub, { EX: newRtExp });
-    res.cookie("refresh_token", newRt, { ...cookieOpts, maxAge: newRtExp * 1000 });
+    res.cookie("refresh_token", newRt, {
+      ...cookieOpts,
+      maxAge: newRtExp * 1000,
+    });
 
     // Yeni AT
-    const { token: newAt, jti: newAtJti, expiresIn: newAtExp } = signAccessToken({ sub: payload.sub });
-    return res.json({ success: true, token: newAt, jti: newAtJti, expiresIn: newAtExp });
+    const {
+      token: newAt,
+      jti: newAtJti,
+      expiresIn: newAtExp,
+    } = signAccessToken({ sub: payload.sub });
+    return res.json({
+      success: true,
+      token: newAt,
+      jti: newAtJti,
+      expiresIn: newAtExp,
+    });
   } catch (e) {
     console.error("refresh error:", e);
     return res.status(500).json({ success: false, message: "Sunucu hatası" });
@@ -123,7 +160,9 @@ router.post("/logout", async (req, res) => {
       try {
         const p = verifyRefreshToken(rt);
         await redis.del(`${RT_PREFIX}${p.jti}`);
-      } catch { /* yok say */ }
+      } catch {
+        /* yok say */
+      }
     }
     res.clearCookie("refresh_token", { ...cookieOpts, maxAge: 0 });
     return res.json({ success: true, message: "Çıkış yapıldı" });
@@ -138,7 +177,8 @@ function auth(req, res, next) {
   try {
     const hdr = req.headers.authorization || "";
     const token = hdr.startsWith("Bearer ") ? hdr.slice(7) : null;
-    if (!token) return res.status(401).json({ success: false, message: "Auth yok" });
+    if (!token)
+      return res.status(401).json({ success: false, message: "Auth yok" });
     const payload = verifyAccessToken(token);
     req.user = payload;
     next();

@@ -1,7 +1,17 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  Box, Paper, Stack, Typography, IconButton, TextField,
-  Button, Divider, Avatar, Tooltip, Fab, CircularProgress
+  Box,
+  Paper,
+  Stack,
+  Typography,
+  IconButton,
+  TextField,
+  Button,
+  Divider,
+  Avatar,
+  Tooltip,
+  Fab,
+  CircularProgress,
 } from "@mui/material";
 import ChatBubbleOutlineRoundedIcon from "@mui/icons-material/ChatBubbleOutlineRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
@@ -29,14 +39,17 @@ export default function Chatbot() {
   });
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [online, setOnline] = useState<"checking" | "online" | "offline">("checking");
+  const [online, setOnline] = useState<"checking" | "online" | "offline">(
+    "checking"
+  );
 
   const listRef = useRef<HTMLDivElement | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     localStorage.setItem("chatbot_messages", JSON.stringify(messages));
-    if (listRef.current) listRef.current.scrollTop = listRef.current.scrollHeight;
+    if (listRef.current)
+      listRef.current.scrollTop = listRef.current.scrollHeight;
   }, [messages, open]);
 
   // Basit “ayakta mı” kontrolü (OPTIONS preflight ile)
@@ -139,9 +152,7 @@ export default function Chatbot() {
             if (delta) {
               full += delta;
               setMessages((prev) =>
-                prev.map((m) =>
-                  m.id === aid ? { ...m, content: full } : m
-                )
+                prev.map((m) => (m.id === aid ? { ...m, content: full } : m))
               );
             }
 
@@ -307,9 +318,7 @@ export default function Chatbot() {
                     py: 1,
                     borderRadius: 2,
                     bgcolor:
-                      m.role === "user"
-                        ? "primary.main"
-                        : "background.default",
+                      m.role === "user" ? "primary.main" : "background.default",
                     color:
                       m.role === "user"
                         ? "primary.contrastText"

@@ -46,7 +46,10 @@ export async function runToolCall(name, args) {
           rows = r ? [r] : [];
           // if (rows.length) await cacheSet(cacheKey, rows);
         } else if (email) {
-          rows = await CustomerRepo.findByEmail(String(email).trim().toLowerCase(), limit);
+          rows = await CustomerRepo.findByEmail(
+            String(email).trim().toLowerCase(),
+            limit
+          );
         } else if (phone) {
           rows = await CustomerRepo.findByPhone(String(phone).trim(), limit);
         } else if (name) {
@@ -110,7 +113,8 @@ export async function runToolCall(name, args) {
       case "branch_summary": {
         return await AccountRepo.getBranchSummary({
           branch_id: args?.branch_id != null ? Number(args.branch_id) : null,
-          branch_code: args?.branch_code != null ? Number(args.branch_code) : null,
+          branch_code:
+            args?.branch_code != null ? Number(args.branch_code) : null,
         });
       }
 
@@ -135,12 +139,16 @@ export async function runToolCall(name, args) {
         if (!cust) return null;
 
         const accountsAll = await AccountRepo.listByCustomerId(cust.id);
-        const filtered =
-          status ? accountsAll.filter((a) => a.status === String(status).toUpperCase()) : accountsAll;
+        const filtered = status
+          ? accountsAll.filter((a) => a.status === String(status).toUpperCase())
+          : accountsAll;
 
         const payload = {
           customer: mapCustomerRow(cust),
-          accounts: filtered.slice(0, Math.max(1, Math.min(100, Number(max_accounts) || 20))),
+          accounts: filtered.slice(
+            0,
+            Math.max(1, Math.min(100, Number(max_accounts) || 20))
+          ),
         };
 
         // if (national_id) await cacheSet(`cust+acc:tckn:${String(national_id).replace(/\D/g,"")}`, payload);

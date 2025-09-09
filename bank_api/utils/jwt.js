@@ -14,9 +14,13 @@ export function signAccessToken(payload) {
 
 export function signRefreshToken(payload) {
   const jti = uuidv4();
-  const token = jwt.sign({ ...payload, jti }, process.env.REFRESH_TOKEN_SECRET, {
-    expiresIn: RT_TTL,
-  });
+  const token = jwt.sign(
+    { ...payload, jti },
+    process.env.REFRESH_TOKEN_SECRET,
+    {
+      expiresIn: RT_TTL,
+    }
+  );
   return { token, jti, expiresIn: RT_TTL };
 }
 
