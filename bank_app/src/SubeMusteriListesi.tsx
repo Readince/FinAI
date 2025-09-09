@@ -212,51 +212,8 @@ export default function SubeMusteriListesi() {
                 </FormControl>
               </Grid>
 
-              <Grid
-                item
-                xs={12}
-                sm={6}
-                md={3}
-                sx={{ flexBasis: "10% !important", maxWidth: "10% !important" }}
-              >
-                <FormControl fullWidth>
-                  <InputLabel id="type-label">Hesap Tipi</InputLabel>
-                  <Select
-                    labelId="type-label"
-                    label="Hesap Tipi"
-                    value={accountType}
-                    onChange={(e) => setAccountType(e.target.value as any)}
-                  >
-                    <MenuItem value={""}>Hepsi</MenuItem>
-                    <MenuItem value={"VADESIZ"}>Vadesiz</MenuItem>
-                    <MenuItem value={"VADELI"}>Vadeli</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-
-              <Grid
-                item
-                xs={12}
-                sm={6}
-                md={3}
-                sx={{ flexBasis: "8% !important", maxWidth: "8% !important" }}
-              >
-                <FormControl fullWidth>
-                  <InputLabel id="ccy-label">Döviz</InputLabel>
-                  <Select
-                    labelId="ccy-label"
-                    label="Döviz"
-                    value={currencyCode}
-                    onChange={(e) => setCurrencyCode(e.target.value as any)}
-                  >
-                    {currencies.map((c) => (
-                      <MenuItem key={c || "all"} value={c}>
-                        {c || "Hepsi"}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
+  
+            
 
               <Grid item xs={12} sm={6} md={3}>
                 <TextField
