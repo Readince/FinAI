@@ -110,8 +110,7 @@ export default function MusteriBilgiSorgulama() {
   const [notFound, setNotFound] = useState<boolean>(false);
 
   // ⬇️ ESKİ BİLGİYİ EKRANA BASMAYALIM: sadece TCKN'yi prefill et
-  useEffect(() => {
-  }, [location.state]);
+  useEffect(() => {}, [location.state]);
 
   function mapCustomer(api: CustomerAPI): CustomerInfo {
     return {
@@ -205,13 +204,25 @@ export default function MusteriBilgiSorgulama() {
     >
       <Stack spacing={3} sx={{ width: "60%" }}>
         {/* Başlık + Aksiyonlar */}
-        <Stack direction="row" justifyContent="space-between" alignItems="center">
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="center"
+        >
           <Typography variant="h4">Müşteri Bilgi Sorgulama</Typography>
           <Stack direction="row" spacing={1}>
-            <Button variant="outlined" startIcon={<ArrowBackRoundedIcon />} onClick={onBack}>
+            <Button
+              variant="outlined"
+              startIcon={<ArrowBackRoundedIcon />}
+              onClick={onBack}
+            >
               Geri Dön
             </Button>
-            <Button variant="contained" startIcon={<PrintRoundedIcon />} onClick={onPrint}>
+            <Button
+              variant="contained"
+              startIcon={<PrintRoundedIcon />}
+              onClick={onPrint}
+            >
               Yazdır
             </Button>
           </Stack>
@@ -362,7 +373,11 @@ export default function MusteriBilgiSorgulama() {
                     ))}
                   </TableBody>
                 </Table>
-                <Typography variant="caption" color="text.secondary" sx={{ mt: 2, display: "block" }}>
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{ mt: 2, display: "block" }}
+                >
                   Toplam hesap: {accounts.length}
                 </Typography>
               </>
@@ -370,7 +385,11 @@ export default function MusteriBilgiSorgulama() {
               <Typography color="text.secondary">Hesap bulunamadı.</Typography>
             )}
             <Divider sx={{ mt: 2 }} />
-            <Typography variant="caption" color="text.secondary" sx={{ mt: 2, display: "block" }}>
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              sx={{ mt: 2, display: "block" }}
+            >
               Bu sayfa yalnızca görüntüleme amaçlıdır. Değerler API’dan çekilir.
             </Typography>
           </CardContent>
