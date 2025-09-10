@@ -54,7 +54,7 @@ type CustomerAPI = {
   address?: string | null;
   phone?: string | null;
   email?: string | null;
-  branch_no?: string | null; // kullanılmıyor ama API'de olabilir
+  branch_no?: string | null;
 };
 
 type AccountAPI = {
@@ -65,7 +65,7 @@ type AccountAPI = {
   sub_no: number | null;
   account_no: string;
   status: string;
-  branch_code?: number | string; // ⬅️ backend JOIN ile gelsin
+  branch_code?: number | string;
 };
 
 type SummaryAPI = { customer: CustomerAPI; accounts: AccountAPI[] };
@@ -107,24 +107,10 @@ export default function MusteriBilgiSorgulama() {
 
   const [customer, setCustomer] = useState<CustomerInfo | undefined>();
   const [accounts, setAccounts] = useState<AccountAPI[]>([]);
+  const [notFound, setNotFound] = useState<boolean>(false);
 
+  // ⬇️ ESKİ BİLGİYİ EKRANA BASMAYALIM: sadece TCKN'yi prefill et
   useEffect(() => {
-    const state = (location.state as any) || {};
-    if (state?.customer?.tckn) {
-      setTcknQuery(state.customer.tckn);
-      setCustomer(state.customer);
-    } else {
-      try {
-        const c = localStorage.getItem("customer");
-        if (c) {
-          const parsed = JSON.parse(c);
-          if (parsed?.tckn) {
-            setTcknQuery(parsed.tckn);
-            setCustomer(parsed);
-          }
-        }
-      } catch {}
-    }
   }, [location.state]);
 
   function mapCustomer(api: CustomerAPI): CustomerInfo {
@@ -150,18 +136,32 @@ export default function MusteriBilgiSorgulama() {
   }
 
   async function fetchSummary(tckn: string) {
+    // Geçersiz TCKN: ekranı temizle
     if (!/^\d{11}$/.test(tckn)) {
       setErr("TCKN 11 haneli olmalı");
+      setNotFound(false);
+      setCustomer(undefined);
+      setAccounts([]);
       return;
     }
+
     setErr("");
+    setNotFound(false);
     setLoading(true);
+
+    // Sorgu başında stale veriyi temizle
+    setCustomer(undefined);
+    setAccounts([]);
+
     try {
       const res = await fetch(
         `${API_BASE}/customers/summary?national_id=${tckn}`
       );
       if (!res.ok) {
-        if (res.status === 404) throw new Error("Müşteri bulunamadı");
+        if (res.status === 404) {
+          setNotFound(true);
+          throw new Error("Müşteri bulunamadı");
+        }
         const data = await safeJson(res);
         throw new Error(data?.msg || `Hata: ${res.status}`);
       }
@@ -170,6 +170,7 @@ export default function MusteriBilgiSorgulama() {
       setAccounts(data.accounts || []);
     } catch (e: any) {
       setErr(e.message || "Beklenmeyen bir hata oluştu");
+      // Hata/404: boş göster
       setCustomer(undefined);
       setAccounts([]);
     } finally {
@@ -204,25 +205,13 @@ export default function MusteriBilgiSorgulama() {
     >
       <Stack spacing={3} sx={{ width: "60%" }}>
         {/* Başlık + Aksiyonlar */}
-        <Stack
-          direction="row"
-          justifyContent="space-between"
-          alignItems="center"
-        >
+        <Stack direction="row" justifyContent="space-between" alignItems="center">
           <Typography variant="h4">Müşteri Bilgi Sorgulama</Typography>
           <Stack direction="row" spacing={1}>
-            <Button
-              variant="outlined"
-              startIcon={<ArrowBackRoundedIcon />}
-              onClick={onBack}
-            >
+            <Button variant="outlined" startIcon={<ArrowBackRoundedIcon />} onClick={onBack}>
               Geri Dön
             </Button>
-            <Button
-              variant="contained"
-              startIcon={<PrintRoundedIcon />}
-              onClick={onPrint}
-            >
+            <Button variant="contained" startIcon={<PrintRoundedIcon />} onClick={onPrint}>
               Yazdır
             </Button>
           </Stack>
@@ -250,9 +239,15 @@ export default function MusteriBilgiSorgulama() {
                 {loading ? "Sorgulanıyor..." : "Sorgula"}
               </Button>
             </Stack>
+
             {err && (
               <Alert severity="error" sx={{ mt: 2 }}>
                 {err}
+              </Alert>
+            )}
+            {notFound && !err && (
+              <Alert severity="info" sx={{ mt: 2 }}>
+                Bu TCKN’ye ait aktif müşteri kaydı bulunamadı.
               </Alert>
             )}
           </CardContent>
@@ -281,7 +276,7 @@ export default function MusteriBilgiSorgulama() {
                   value={
                     customer?.dogum
                       ? dayjs(customer.dogum).format("DD/MM/YYYY")
-                      : "—"
+                      : ""
                   }
                 />
               </Grid>
@@ -293,7 +288,7 @@ export default function MusteriBilgiSorgulama() {
                       ? customer.cinsiyet === "kadin"
                         ? "Kadın"
                         : "Erkek"
-                      : undefined
+                      : ""
                   }
                 />
               </Grid>
@@ -305,7 +300,7 @@ export default function MusteriBilgiSorgulama() {
                       ? customer.uyruk === "yabanci"
                         ? "Yabancı"
                         : "Türk"
-                      : undefined
+                      : ""
                   }
                 />
               </Grid>
@@ -354,8 +349,7 @@ export default function MusteriBilgiSorgulama() {
                     {accounts.map((a) => (
                       <TableRow key={a.account_no}>
                         <TableCell>{a.account_no}</TableCell>
-                        <TableCell>{a.branch_code ?? "—"}</TableCell>{" "}
-                        {/* <-- direkt DB'den */}
+                        <TableCell>{a.branch_code ?? "—"}</TableCell>
                         <TableCell>{a.currency_code}</TableCell>
                         <TableCell align="right">{a.balance}</TableCell>
                         <TableCell>
@@ -368,11 +362,7 @@ export default function MusteriBilgiSorgulama() {
                     ))}
                   </TableBody>
                 </Table>
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  sx={{ mt: 2, display: "block" }}
-                >
+                <Typography variant="caption" color="text.secondary" sx={{ mt: 2, display: "block" }}>
                   Toplam hesap: {accounts.length}
                 </Typography>
               </>
@@ -380,11 +370,7 @@ export default function MusteriBilgiSorgulama() {
               <Typography color="text.secondary">Hesap bulunamadı.</Typography>
             )}
             <Divider sx={{ mt: 2 }} />
-            <Typography
-              variant="caption"
-              color="text.secondary"
-              sx={{ mt: 2, display: "block" }}
-            >
+            <Typography variant="caption" color="text.secondary" sx={{ mt: 2, display: "block" }}>
               Bu sayfa yalnızca görüntüleme amaçlıdır. Değerler API’dan çekilir.
             </Typography>
           </CardContent>
