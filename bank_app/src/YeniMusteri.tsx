@@ -161,9 +161,7 @@ export default function YeniMusteri() {
 
       setMessage(
         ekNo
-          ? `Müşteri oluşturuldu (ID: ${customerId}). Varsayılan vadesiz TRY hesap açıldı — Ek No: ${String(
-              ekNo
-            ).padStart(2, "0")}.`
+          ? `Müşteri oluşturuldu (ID: ${customerId}). Varsayılan vadesiz TRY hesap açıldı`
           : `Müşteri oluşturuldu (ID: ${customerId}).`
       );
 

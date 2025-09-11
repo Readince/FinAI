@@ -1,4 +1,3 @@
-// services/ai/tools.js
 export const tools = [
   {
     type: "function",

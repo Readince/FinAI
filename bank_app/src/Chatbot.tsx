@@ -11,11 +11,9 @@ import {
   Avatar,
   Tooltip,
   Fab,
-  CircularProgress,
 } from "@mui/material";
 import ChatBubbleOutlineRoundedIcon from "@mui/icons-material/ChatBubbleOutlineRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
-import MinimizeRoundedIcon from "@mui/icons-material/MinimizeRounded";
 import SendRoundedIcon from "@mui/icons-material/SendRounded";
 
 type ChatMessage = {
@@ -29,48 +27,46 @@ const API_URL = import.meta.env.VITE_API_URL ?? "/ai/chat"; // örn: http://loca
 
 export default function Chatbot() {
   const [open, setOpen] = useState(false);
-  const [messages, setMessages] = useState<ChatMessage[]>(() => {
-    try {
-      const raw = localStorage.getItem("chatbot_messages");
-      return raw ? (JSON.parse(raw) as ChatMessage[]) : [];
-    } catch {
-      return [];
-    }
-  });
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [online, setOnline] = useState<"checking" | "online" | "offline">(
-    "checking"
-  );
 
   const listRef = useRef<HTMLDivElement | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
+  // Sayfa içinde mesaj geldiğinde kaydır
   useEffect(() => {
-    localStorage.setItem("chatbot_messages", JSON.stringify(messages));
-    if (listRef.current)
+    if (listRef.current) {
       listRef.current.scrollTop = listRef.current.scrollHeight;
+    }
   }, [messages, open]);
 
-  // Basit “ayakta mı” kontrolü (OPTIONS preflight ile)
+  // Eski mesajı saklama: sayfa kapanırken ve sohbet kapatılırken temizle
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
+    const onUnload = () => {
+      setMessages([]);
       try {
-        const r = await fetch(API_URL, { method: "OPTIONS" });
-        if (!cancelled) setOnline(r.ok ? "online" : "offline");
-      } catch {
-        if (!cancelled) setOnline("offline");
-      }
-    })();
-    return () => {
-      cancelled = true;
+        // önceki sürümlerden kalan kayıt varsa temizle
+        localStorage.removeItem("chatbot_messages");
+      } catch {}
     };
+    window.addEventListener("beforeunload", onUnload);
+    return () => window.removeEventListener("beforeunload", onUnload);
   }, []);
+
+  // Sohbet penceresi kapanınca mesajları temizle
+  useEffect(() => {
+    if (!open) {
+      setMessages([]);
+      setInput("");
+      abortRef.current?.abort();
+      setLoading(false);
+    }
+  }, [open]);
 
   const placeholder = useMemo(
     () =>
-      "Merhaba! LLaMA ile konuşmak için yaz ve Gönder’e bas.\nCevaplar akış (stream) halinde gelecek.",
+      "Merhaba! Sohbete başlamak için yaz ve Gönder’e bas.\nCevaplar akış halinde gelecektir.",
     []
   );
 
@@ -118,7 +114,6 @@ export default function Chatbot() {
       const decoder = new TextDecoder();
       let buf = "";
       let full = "";
-      let gotFirstChunk = false;
 
       while (true) {
         const { value, done } = await reader.read();
@@ -133,19 +128,12 @@ export default function Chatbot() {
           if (!line) continue;
 
           try {
-            // ✅ "data:" prefixini kırp
             const clean = line.startsWith("data:")
               ? line.slice(5).trim()
               : line;
-
             if (!clean) continue;
+
             const evt = JSON.parse(clean);
-
-            if (!gotFirstChunk) {
-              setOnline("online");
-              gotFirstChunk = true;
-            }
-
             if (evt.error) throw new Error(evt.detail || evt.error);
 
             const delta: string = evt?.message?.content ?? "";
@@ -161,7 +149,8 @@ export default function Chatbot() {
               break;
             }
           } catch (e) {
-            console.warn("JSON parse error or incomplete chunk:", e, line);
+            // parça eksikse görmezden gel
+            // console.warn("chunk parse", e);
           }
         }
       }
@@ -172,7 +161,6 @@ export default function Chatbot() {
         ...prev.filter((m) => m.id !== aid),
         { id: hid, role: "assistant", content: `⚠️ ${msg}`, ts: Date.now() },
       ]);
-      setOnline("offline");
     } finally {
       setLoading(false);
     }
@@ -195,6 +183,7 @@ export default function Chatbot() {
             right: { xs: 16, sm: 24 },
             bottom: { xs: 16, sm: 24 },
             zIndex: (t) => t.zIndex.tooltip + 1,
+            boxShadow: 6,
           }}
           aria-label="chatbot aç/kapat"
         >
@@ -205,21 +194,22 @@ export default function Chatbot() {
       {/* Pencere */}
       {open && (
         <Paper
-          elevation={8}
+          elevation={12}
           role="dialog"
           aria-label="Sohbet penceresi"
           sx={{
             position: "fixed",
             right: { xs: 8, sm: 24 },
             bottom: { xs: 84, sm: 96 },
-            width: { xs: "calc(100% - 16px)", sm: 380 },
-            height: { xs: 420, sm: 520 },
-            maxHeight: "75vh",
-            borderRadius: 3,
+            width: { xs: "calc(100% - 16px)", sm: 400 },
+            height: { xs: 440, sm: 540 },
+            maxHeight: "78vh",
+            borderRadius: 4,
             overflow: "hidden",
             display: "flex",
             flexDirection: "column",
             zIndex: (t) => t.zIndex.modal,
+            backdropFilter: "blur(6px)",
           }}
         >
           {/* Header */}
@@ -229,39 +219,32 @@ export default function Chatbot() {
             sx={{
               px: 2,
               py: 1.25,
-              bgcolor: "background.default",
+              background:
+                "linear-gradient(135deg, rgba(25,118,210,0.10), rgba(25,118,210,0.02))",
               borderBottom: (t) => `1px solid ${t.palette.divider}`,
             }}
           >
-            <Avatar sx={{ width: 28, height: 28, mr: 1 }}>
+            <Avatar
+              sx={{
+                width: 28,
+                height: 28,
+                mr: 1,
+                bgcolor: "primary.main",
+                color: "primary.contrastText",
+              }}
+            >
               <ChatBubbleOutlineRoundedIcon fontSize="small" />
             </Avatar>
             <Box sx={{ flex: 1 }}>
-              <Typography variant="subtitle1" fontWeight={600} lineHeight={1.2}>
+              <Typography variant="subtitle1" fontWeight={700} lineHeight={1.2}>
                 Chatbot
               </Typography>
-              <Typography
-                variant="caption"
-                color="text.secondary"
-                sx={{ display: "block" }}
-              >
-                {online === "checking"
-                  ? "Durum kontrol ediliyor…"
-                  : online === "online"
-                  ? "Çevrimiçi"
-                  : "Çevrimdışı"}
+              <Typography variant="caption" color="text.secondary">
+                Yardımcı asistan
               </Typography>
             </Box>
-            {loading && <CircularProgress size={18} sx={{ mr: 1 }} />}
-            <Tooltip title="Küçült">
-              <IconButton
-                size="small"
-                onClick={() => setOpen(false)}
-                aria-label="pencereyi küçült"
-              >
-                <MinimizeRoundedIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
+
+            {/* Sadece kapatma tuşu */}
             <Tooltip title="Kapat">
               <IconButton
                 size="small"
@@ -294,6 +277,7 @@ export default function Chatbot() {
                   p: 1.5,
                   bgcolor: "background.default",
                   borderStyle: "dashed",
+                  borderRadius: 2,
                 }}
               >
                 <Typography
@@ -313,7 +297,7 @@ export default function Chatbot() {
               >
                 <Box
                   sx={{
-                    maxWidth: "80%",
+                    maxWidth: "82%",
                     px: 1.25,
                     py: 1,
                     borderRadius: 2,
@@ -329,6 +313,7 @@ export default function Chatbot() {
                         : "none",
                     whiteSpace: "pre-wrap",
                     wordBreak: "break-word",
+                    boxShadow: m.role === "user" ? 2 : 0,
                   }}
                 >
                   <Typography variant="body2">{m.content}</Typography>
@@ -346,7 +331,7 @@ export default function Chatbot() {
               e.preventDefault();
               send();
             }}
-            sx={{ p: 1.25 }}
+            sx={{ p: 1.25, bgcolor: "background.default" }}
           >
             <Stack direction="row" spacing={1}>
               <TextField
@@ -356,16 +341,31 @@ export default function Chatbot() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 autoFocus
+                disabled={loading}
               />
               <Button
                 type="submit"
                 variant="contained"
                 endIcon={<SendRoundedIcon />}
                 disabled={!input.trim() || loading}
+                sx={{
+                  fontSize: "0.75rem",
+                  padding: "4px 10px",
+                  minWidth: "unset",
+                }}
               >
                 Gönder
               </Button>
-              <Button onClick={cancel} variant="outlined" disabled={!loading}>
+              <Button
+                onClick={cancel}
+                variant="outlined"
+                disabled={!loading}
+                sx={{
+                  fontSize: "0.75rem",
+                  padding: "4px 10px",
+                  minWidth: "unset",
+                }}
+              >
                 Durdur
               </Button>
             </Stack>

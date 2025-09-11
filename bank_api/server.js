@@ -81,6 +81,10 @@ app.use("/accounts", accountRoutes);
 const OLLAMA_HOST = process.env.OLLAMA_HOST || "http://127.0.0.1:11434";
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL || "llama3.1:8b";
 
+// NEW: deterministik varsayılanlar
+const defaultOptions = { temperature: 0, top_p: 0.9 };
+
+// NEW: daha sert kurallar ekledim
 const systemMsg = {
   role: "system",
   content: [
@@ -90,17 +94,31 @@ const systemMsg = {
     "Tool çağırmak için yeterli kriter yoksa önce kullanıcıdan kriter iste.",
     "Selamlama/sohbet mesajlarında asla müşteri verisi getirme; araç çağırma.",
     "TC/telefon/kart/IBAN gibi PII daima maskeli olmalı (backend de maskeleyecek).",
+    // NEW:
+    "Müşteri/hesap bilgisi istenirken araç (tool) çağırmadan ASLA serbest yanıt üretme; araç çağırmak için yeterli kriter yoksa KESİN biçimde kriter iste ve dur.",
+    "Tool sonucu yoksa 'kayıt bulunamadı' veya 'yetersiz kriter' de; uydurma."
   ].join("\n"),
 };
 
-// Basit niyet kontrolü (sadece anahtar kelime + sayı)
+// Basit niyet kontrolü (sadece anahtar kelime + sayı + İSİM)  // NEW
 function allowToolsFor(messages) {
   const lastUser = [...messages].reverse().find((m) => m.role === "user");
-  const t = (lastUser?.content || "").toLowerCase();
+  const t = (lastUser?.content || "").trim();
+
   const kw =
     /(müşteri|hesap|iban|tc|kimlik|telefon|e-?posta|email|şube|account|customer|id)/i;
   const hasDigits = /\d{4,}/.test(t);
-  return kw.test(t) || hasDigits;
+
+  // İsim benzeri ifade (1–4 kelime, harf ağırlıklı, rakamsız)
+  const nameLike = (() => {
+    const words = t.split(/\s+/).filter(Boolean);
+    if (words.length < 1 || words.length > 4) return false;
+    const letterRe = /^[A-Za-zÇĞİIÖŞÜçğıiöşü\-'.]+$/;
+    const allLetters = words.every((w) => letterRe.test(w));
+    return allLetters && !hasDigits;
+  })();
+
+  return kw.test(t) || hasDigits || nameLike;
 }
 
 function extractTcFromMessages(messages) {
@@ -108,6 +126,41 @@ function extractTcFromMessages(messages) {
   if (!lastUser?.content) return null;
   const m = lastUser.content.match(/\b\d{11}\b/);
   return m ? m[0] : null;
+}
+
+// NEW: İsim çıkarımı
+function extractNameFromMessages(messages) {
+  const lastUser = [...messages].reverse().find((m) => m.role === "user");
+  if (!lastUser?.content) return null;
+  const text = lastUser.content.trim();
+
+  // TC/e-posta/telefon varsa isimle uğraşma
+  if (/\b\d{11}\b/.test(text)) return null;
+  if (/\+?\d[\d\s\-()]{9,}/.test(text)) return null;
+  if (/\b\S+@\S+\.\S+\b/.test(text)) return null;
+
+  const words = text.split(/\s+/).filter(Boolean);
+  if (words.length < 1 || words.length > 4) return null;
+
+  const letterRe = /^[A-Za-zÇĞİIÖŞÜçğıiöşü\-'.]+$/;
+  if (!words.every((w) => letterRe.test(w))) return null;
+
+  const ban = new Set([
+    "müşteri",
+    "hesap",
+    "tc",
+    "kimlik",
+    "telefon",
+    "email",
+    "e-posta",
+    "şube",
+    "account",
+    "customer",
+    "id",
+  ]);
+  if (words.length === 1 && ban.has(words[0].toLowerCase())) return null;
+
+  return text;
 }
 
 /**
@@ -131,7 +184,7 @@ app.post("/ai/chat", async (req, res) => {
     const useTools = allowToolsFor(messages);
     const tcFromText = useTools ? extractTcFromMessages(messages) : null;
 
-    // 0) 11 haneli TC varsa → modeli atla, direkt tool
+    // 0) 11 haneli TC varsa → modeli atla, direkt tool (mevcut)
     if (tcFromText) {
       const normTc = tcFromText.replace(/\D/g, "");
       const resultRows = await runToolCall("find_customer", {
@@ -172,6 +225,57 @@ app.post("/ai/chat", async (req, res) => {
       return res.end();
     }
 
+    // NEW 0.1) İSİM geldiyse → modeli atla, direkt tool
+    if (useTools) {
+      const nameFromText = extractNameFromMessages(messages);
+      if (nameFromText) {
+        const resultRows = await runToolCall("find_customer", {
+          name: nameFromText,
+          limit: 5,
+        });
+
+        let content = "";
+        if (!resultRows?.length) {
+          content = `“${nameFromText}” için eşleşme bulunamadı.\nDaha fazla kriter (ör. şehir/şube, e-posta, telefon) verebilir misin?`;
+        } else {
+          content = resultRows
+            .map((r, i) => {
+              return [
+                `#${i + 1} Müşteri: ${r.full_name || "-"}`,
+                `E-posta: ${r.email || "-"}`,
+                `Telefon: ${r.phone_masked || "-"}`,
+                `TC: ${r.national_id_masked || "-"}`,
+                `Şube ID: ${r.branch_id ?? "-"}`,
+              ].join("\n");
+            })
+            .join("\n\n");
+
+          // İSTERSEN: Tek eşleşmede otomatik hesapları da getir:
+          // if (resultRows.length === 1 && resultRows[0]?.id) {
+          //   const combo = await runToolCall("find_customer_and_accounts", { id: resultRows[0].id, max_accounts: 10 });
+          //   if (combo?.accounts?.length) {
+          //     content += `\n\nHesaplar (${combo.accounts.length}):\n` +
+          //       combo.accounts.map(a => `• ${a.account_no} (${a.currency_code}) - ${a.status}`).join("\n");
+          //   }
+          // }
+        }
+
+        res.write(
+          `data: ${JSON.stringify({
+            phase: "tool-bypass",
+            args: { name: nameFromText },
+          })}\n\n`
+        );
+        res.write(
+          `data: ${JSON.stringify({
+            message: { role: "assistant", content },
+          })}\n\n`
+        );
+        res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
+        return res.end();
+      }
+    }
+
     // 1) Konuşmayı hazırla
     let convo = [systemMsg, ...messages];
     if (useTools) {
@@ -191,7 +295,7 @@ app.post("/ai/chat", async (req, res) => {
         messages: convo,
         tools: useTools ? tools : undefined,
         stream: false,
-        options,
+        options: { ...defaultOptions, ...options }, // NEW deterministik
       }),
     });
     if (!resp.ok) {
@@ -252,7 +356,7 @@ app.post("/ai/chat", async (req, res) => {
             messages: convo,
             tools: useTools ? tools : undefined,
             stream: false,
-            options,
+            options: { ...defaultOptions, ...options }, // NEW deterministik
           }),
         });
         if (!resp.ok) {

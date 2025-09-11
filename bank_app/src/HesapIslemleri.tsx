@@ -180,7 +180,7 @@ export default function HesapIslemleri() {
       const acc = data?.account || data;
       const ekNo = acc?.sub_no_str ?? acc?.sub_no;
       setMessage(
-        `Hesap oluşturuldu. Ek No: ${String(ekNo ?? "").padStart(2, "0")}`
+        `Hesap oluşturuldu.`
       );
 
       // TCKN ve bakiye reset; diğer tercihler kalsın
